@@ -1,0 +1,18 @@
+# Run: docker-compose --env-file .env.dev up -d
+
+services:
+  chat_service_postgres:
+    image: postgres:latest
+    container_name: chat_service_postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - chat_service_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+    restart: unless-stopped
+
+volumes:
+  chat_service_postgres_data:
