@@ -2,10 +2,9 @@ package app
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
-	"gorm.io/gorm"
 
-	"github.com/MingPV/ChatService/internal/entities"
 	GrpcOrderHandler "github.com/MingPV/ChatService/internal/order/handler/grpc"
 	orderRepository "github.com/MingPV/ChatService/internal/order/repository"
 	orderUseCase "github.com/MingPV/ChatService/internal/order/usecase"
@@ -17,7 +16,7 @@ import (
 )
 
 // rest
-func SetupRestServer(db *gorm.DB, cfg *config.Config) (*fiber.App, error) {
+func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error) {
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
 	// comment out Swagger when testing
@@ -29,9 +28,11 @@ func SetupRestServer(db *gorm.DB, cfg *config.Config) (*fiber.App, error) {
 }
 
 // grpc
-func SetupGrpcServer(db *gorm.DB, cfg *config.Config) (*grpc.Server, error) {
+func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, error) {
 	s := grpc.NewServer()
-	orderRepo := orderRepository.NewGormOrderRepository(db)
+
+	// Dependency wiring for Orders using MongoDB
+	orderRepo := orderRepository.NewMongoOrderRepository(db)
 	orderService := orderUseCase.NewOrderService(orderRepo)
 
 	orderHandler := GrpcOrderHandler.NewGrpcOrderHandler(orderService)
@@ -40,18 +41,11 @@ func SetupGrpcServer(db *gorm.DB, cfg *config.Config) (*grpc.Server, error) {
 }
 
 // dependencies
-func SetupDependencies(env string) (*gorm.DB, *config.Config, error) {
+func SetupDependencies(env string) (*mongo.Database, *config.Config, error) {
 	cfg := config.LoadConfig(env)
 
-	db, err := database.Connect(cfg.DatabaseDSN)
+	db, err := database.Connect(cfg.MongoURI, cfg.DBName)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	if env == "test" {
-		db.Migrator().DropTable(&entities.Order{})
-	}
-	if err := db.AutoMigrate(&entities.Order{}); err != nil {
 		return nil, nil, err
 	}
 

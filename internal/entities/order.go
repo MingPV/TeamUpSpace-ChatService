@@ -1,6 +1,6 @@
 package entities
 
 type Order struct {
-	ID    uint    `gorm:"primaryKey;autoIncrement" json:"id"`
-	Total float64 `json:"total"`
+	ID    uint    `json:"id" bson:"_id,omitempty"`
+	Total float64 `json:"total" bson:"total"`
 }

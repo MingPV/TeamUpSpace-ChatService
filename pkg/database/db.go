@@ -1,40 +1,43 @@
 package database
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
-	DB    *gorm.DB
-	sqlDB *sql.DB
+	Client *mongo.Client
+	DB     *mongo.Database
 )
 
-func Connect(dsn string) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func Connect(uri, dbName string) (*mongo.Database, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
 
-	sqlDB, err = db.DB()
-	if err != nil {
+	if err := client.Ping(ctx, nil); err != nil {
 		return nil, err
 	}
 
-	DB = db
-	log.Println("✅ Database connected")
-	return db, nil
+	Client = client
+	DB = client.Database(dbName)
+	log.Println("✅ MongoDB connected")
+	return DB, nil
 }
 
-// Close closes the underlying sql.DB connection pool
 func Close() error {
-	fmt.Println("🔒 Closing Database connection...")
-	if sqlDB != nil {
-		return sqlDB.Close()
+	if Client == nil {
+		return nil
 	}
-	return nil
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return Client.Disconnect(ctx)
 }

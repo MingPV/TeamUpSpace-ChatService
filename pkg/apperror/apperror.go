@@ -1,11 +1,12 @@
 package apperror
 
 import (
+	"context"
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
-	"gorm.io/gorm/logger"
 )
 
 type AppError struct {
@@ -38,39 +39,25 @@ var (
 	ErrNotImplemented = errors.New("not implemented")       // 501
 
 	// ------------------------
-	// GORM errors
+	// MongoDB / persistence errors
 	// ------------------------
-	ErrRecordNotFound                = logger.ErrRecordNotFound                                          // 404
-	ErrInvalidTransaction            = errors.New("invalid transaction")                                 // 400
-	ErrMissingWhereClause            = errors.New("WHERE conditions required")                           // 400
-	ErrUnsupportedRelation           = errors.New("unsupported relations")                               // 400
-	ErrPrimaryKeyRequired            = errors.New("primary key required")                                // 400
-	ErrModelValueRequired            = errors.New("model value required")                                // 400
-	ErrModelAccessibleFieldsRequired = errors.New("model accessible fields required")                    // 400
-	ErrSubQueryRequired              = errors.New("sub query required")                                  // 400
-	ErrUnsupportData                 = errors.New("unsupported data")                                    // 400
-	ErrUnsupportedDriver             = errors.New("unsupported driver")                                  // 400
-	ErrRegistered                    = errors.New("registered")                                          // 409
-	ErrInvalidField                  = errors.New("invalid field")                                       // 400
-	ErrEmptySlice                    = errors.New("empty slice found")                                   // 400
-	ErrDryRunModeUnsupported         = errors.New("dry run mode unsupported")                            // 400
-	ErrInvalidDB                     = errors.New("invalid db")                                          // 400
-	ErrInvalidValue                  = errors.New("invalid value, should be pointer to struct or slice") // 400
-	ErrInvalidValueOfLength          = errors.New("invalid association values, length doesn't match")    // 400
-	ErrPreloadNotAllowed             = errors.New("preload is not allowed when count is used")           // 400
-	ErrDuplicatedKey                 = errors.New("duplicated key not allowed")                          // 409
-	ErrForeignKeyViolated            = errors.New("violates foreign key constraint")                     // 409
-	ErrCheckConstraintViolated       = errors.New("violates check constraint")                           // 409
+	// Map "record not found" to Mongo's ErrNoDocuments.
+	ErrRecordNotFound = mongo.ErrNoDocuments // 404
+	// You can raise this explicitly in your domain; detection also checks the real Mongo error codes.
+	ErrDuplicatedKey = errors.New("duplicated key not allowed") // 409
 
 	// ------------------------
 	// Validation errors
 	// ------------------------
-	ErrInvalidData   = errors.New("invalid data")           // 400
-	ErrInvalidID     = errors.New("invalid id")             // 400
-	ErrRequiredField = errors.New("required field missing") // 400
-	ErrInvalidFormat = errors.New("invalid format")         // 400
-	ErrOutOfRange    = errors.New("value out of range")     // 400
-	ErrUnprocessable = errors.New("unprocessable entity")   // 422
+	ErrInvalidData          = errors.New("invalid data")                                        // 400
+	ErrInvalidID            = errors.New("invalid id")                                          // 400
+	ErrRequiredField        = errors.New("required field missing")                              // 400
+	ErrInvalidFormat        = errors.New("invalid format")                                      // 400
+	ErrOutOfRange           = errors.New("value out of range")                                  // 400
+	ErrUnprocessable        = errors.New("unprocessable entity")                                // 422
+	ErrInvalidValue         = errors.New("invalid value, should be pointer to struct or slice") // 400
+	ErrInvalidValueOfLength = errors.New("invalid association values, length doesn't match")    // 400
+	ErrInvalidField         = errors.New("invalid field")                                       // 400
 
 	// ------------------------
 	// Business logic / domain-specific errors
@@ -94,8 +81,10 @@ func StatusCode(err error) int {
 	// Generic
 	case errors.Is(err, ErrInternalServer), errors.Is(err, ErrUnknown), errors.Is(err, ErrTransactionAbort):
 		return fiber.StatusInternalServerError
-	case errors.Is(err, ErrTimeout):
+	case errors.Is(err, ErrTimeout), errors.Is(err, context.DeadlineExceeded):
 		return fiber.StatusGatewayTimeout
+	case errors.Is(err, context.Canceled):
+		return fiber.StatusRequestTimeout
 	case errors.Is(err, ErrUnauthorized):
 		return fiber.StatusUnauthorized
 	case errors.Is(err, ErrForbidden), errors.Is(err, ErrOperationDenied):
@@ -103,21 +92,13 @@ func StatusCode(err error) int {
 	case errors.Is(err, ErrNotImplemented):
 		return fiber.StatusNotImplemented
 
-	// Database / GORM errors
-	case errors.Is(err, ErrRecordNotFound):
+	// MongoDB / persistence errors
+	case errors.Is(err, ErrRecordNotFound), errors.Is(err, mongo.ErrNoDocuments):
 		return fiber.StatusNotFound
-	case errors.Is(err, ErrDuplicatedKey), errors.Is(err, ErrConflict), errors.Is(err, ErrAlreadyExists), errors.Is(err, ErrNotAvailable):
+	case isMongoDuplicateKey(err), errors.Is(err, ErrDuplicatedKey), errors.Is(err, ErrConflict), errors.Is(err, ErrAlreadyExists), errors.Is(err, ErrNotAvailable):
 		return fiber.StatusConflict
 	case errors.Is(err, ErrDependencyFail):
 		return fiber.StatusBadGateway
-	case errors.Is(err, ErrInvalidTransaction), errors.Is(err, ErrMissingWhereClause),
-		errors.Is(err, ErrUnsupportedRelation), errors.Is(err, ErrPrimaryKeyRequired),
-		errors.Is(err, ErrModelValueRequired), errors.Is(err, ErrModelAccessibleFieldsRequired),
-		errors.Is(err, ErrSubQueryRequired), errors.Is(err, ErrUnsupportData),
-		errors.Is(err, ErrUnsupportedDriver), errors.Is(err, ErrEmptySlice),
-		errors.Is(err, ErrDryRunModeUnsupported), errors.Is(err, ErrPreloadNotAllowed),
-		errors.Is(err, ErrForeignKeyViolated), errors.Is(err, ErrCheckConstraintViolated):
-		return fiber.StatusBadRequest
 
 	// Validation / business logic
 	case errors.Is(err, ErrInvalidData), errors.Is(err, ErrInvalidID), errors.Is(err, ErrRequiredField),
@@ -141,8 +122,10 @@ func GRPCCode(err error) codes.Code {
 	// Generic
 	case errors.Is(err, ErrInternalServer), errors.Is(err, ErrUnknown), errors.Is(err, ErrTransactionAbort):
 		return codes.Internal
-	case errors.Is(err, ErrTimeout):
+	case errors.Is(err, ErrTimeout), errors.Is(err, context.DeadlineExceeded):
 		return codes.DeadlineExceeded
+	case errors.Is(err, context.Canceled):
+		return codes.Canceled
 	case errors.Is(err, ErrUnauthorized):
 		return codes.Unauthenticated
 	case errors.Is(err, ErrForbidden), errors.Is(err, ErrOperationDenied):
@@ -150,26 +133,19 @@ func GRPCCode(err error) codes.Code {
 	case errors.Is(err, ErrNotImplemented):
 		return codes.Unimplemented
 
-	// Database / GORM errors
-	case errors.Is(err, ErrRecordNotFound):
+	// MongoDB / persistence errors
+	case errors.Is(err, ErrRecordNotFound), errors.Is(err, mongo.ErrNoDocuments):
 		return codes.NotFound
-	case errors.Is(err, ErrDuplicatedKey), errors.Is(err, ErrConflict), errors.Is(err, ErrAlreadyExists), errors.Is(err, ErrNotAvailable):
+	case isMongoDuplicateKey(err), errors.Is(err, ErrDuplicatedKey), errors.Is(err, ErrConflict), errors.Is(err, ErrAlreadyExists), errors.Is(err, ErrNotAvailable):
 		return codes.AlreadyExists
 	case errors.Is(err, ErrDependencyFail):
 		return codes.FailedPrecondition
-	case errors.Is(err, ErrInvalidTransaction), errors.Is(err, ErrMissingWhereClause),
-		errors.Is(err, ErrUnsupportedRelation), errors.Is(err, ErrPrimaryKeyRequired),
-		errors.Is(err, ErrModelValueRequired), errors.Is(err, ErrModelAccessibleFieldsRequired),
-		errors.Is(err, ErrSubQueryRequired), errors.Is(err, ErrUnsupportData),
-		errors.Is(err, ErrUnsupportedDriver), errors.Is(err, ErrEmptySlice),
-		errors.Is(err, ErrDryRunModeUnsupported), errors.Is(err, ErrPreloadNotAllowed),
-		errors.Is(err, ErrForeignKeyViolated), errors.Is(err, ErrCheckConstraintViolated),
-		errors.Is(err, ErrInvalidData), errors.Is(err, ErrInvalidID), errors.Is(err, ErrRequiredField),
+
+	// Validation / business logic
+	case errors.Is(err, ErrInvalidData), errors.Is(err, ErrInvalidID), errors.Is(err, ErrRequiredField),
 		errors.Is(err, ErrInvalidFormat), errors.Is(err, ErrOutOfRange), errors.Is(err, ErrInvalidValue),
 		errors.Is(err, ErrInvalidValueOfLength), errors.Is(err, ErrInvalidField):
 		return codes.InvalidArgument
-
-	// Validation / business logic
 	case errors.Is(err, ErrUnprocessable):
 		return codes.FailedPrecondition
 	case errors.Is(err, ErrLimitExceeded):
@@ -179,4 +155,54 @@ func GRPCCode(err error) codes.Code {
 	default:
 		return codes.Unknown
 	}
+}
+
+// isMongoDuplicateKey returns true if the error corresponds to a MongoDB duplicate key violation.
+func isMongoDuplicateKey(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Prefer the helper if available in the driver version.
+	// This will return true for code 11000/11001 and related duplicate key scenarios.
+	if mongo.IsDuplicateKeyError(err) {
+		return true
+	}
+
+	// Fallback checks for older driver versions or wrapped errors.
+
+	// WriteException
+	var we mongo.WriteException
+	if errors.As(err, &we) {
+		for _, e := range we.WriteErrors {
+			if e.Code == 11000 || e.Code == 11001 || e.Code == 12582 {
+				return true
+			}
+		}
+		if we.WriteConcernError != nil {
+			if we.WriteConcernError.Code == 11000 || we.WriteConcernError.Code == 11001 || we.WriteConcernError.Code == 12582 {
+				return true
+			}
+		}
+	}
+
+	// BulkWriteException
+	var bwe mongo.BulkWriteException
+	if errors.As(err, &bwe) {
+		for _, e := range bwe.WriteErrors {
+			if e.Code == 11000 || e.Code == 11001 || e.Code == 12582 {
+				return true
+			}
+		}
+	}
+
+	// CommandError
+	var ce mongo.CommandError
+	if errors.As(err, &ce) {
+		if ce.Code == 11000 || ce.Code == 11001 || ce.Code == 12582 {
+			return true
+		}
+	}
+
+	return false
 }

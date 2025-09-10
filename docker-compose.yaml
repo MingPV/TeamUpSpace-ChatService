@@ -1,18 +1,16 @@
 # Run: docker-compose --env-file .env.dev up -d
 
 services:
-  chat_service_postgres:
-    image: postgres:latest
-    container_name: chat_service_postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - chat_service_postgres_data:/var/lib/postgresql/data
+  mongo:
+    image: mongo:6
+    container_name: chatservice-mongo
+    restart: always
     ports:
-      - "${DB_PORT}:5432"
-    restart: unless-stopped
+      - "27014:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    volumes:
+      - chat_service_mongo_data:/data/db
 
 volumes:
-  chat_service_postgres_data:
+  chat_service_mongo_data:

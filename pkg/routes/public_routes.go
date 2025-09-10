@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	// Order
 	orderHandler "github.com/MingPV/ChatService/internal/order/handler/rest"
@@ -10,14 +10,14 @@ import (
 	orderUseCase "github.com/MingPV/ChatService/internal/order/usecase"
 )
 
-func RegisterPublicRoutes(app fiber.Router, db *gorm.DB) {
+func RegisterPublicRoutes(app fiber.Router, db *mongo.Database) {
 
 	api := app.Group("/api/v1")
 
 	// === Dependency Wiring ===
 
-	// Order
-	orderRepo := orderRepository.NewGormOrderRepository(db)
+	// Dependency wiring for Orders using MongoDB
+	orderRepo := orderRepository.NewMongoOrderRepository(db)
 	orderService := orderUseCase.NewOrderService(orderRepo)
 	orderHandler := orderHandler.NewHttpOrderHandler(orderService)
 

@@ -1,61 +1,150 @@
 package repository
 
 import (
+	"context"
+	"errors"
+	"time"
+
 	"github.com/MingPV/ChatService/internal/entities"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type GormOrderRepository struct {
-	db *gorm.DB
+// NOTE: Replaced GORM repository with MongoDB implementation in the same package and file.
+
+type MongoOrderRepository struct {
+	db   *mongo.Database
+	coll *mongo.Collection
 }
 
-func NewGormOrderRepository(db *gorm.DB) OrderRepository {
-	return &GormOrderRepository{db: db}
+func NewMongoOrderRepository(db *mongo.Database) OrderRepository {
+	return &MongoOrderRepository{
+		db:   db,
+		coll: db.Collection("orders"),
+	}
 }
 
-func (r *GormOrderRepository) Save(order *entities.Order) error {
-	return r.db.Create(&order).Error
+type orderDoc struct {
+	ID    int     `bson:"_id,omitempty"`
+	Total float64 `bson:"total"`
 }
 
-func (r *GormOrderRepository) FindAll() ([]*entities.Order, error) {
-	var orderValues []entities.Order
-	if err := r.db.Find(&orderValues).Error; err != nil {
+type counterDoc struct {
+	ID  string `bson:"_id"`
+	Seq int    `bson:"seq"`
+}
+
+func (r *MongoOrderRepository) Save(order *entities.Order) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	nextID, err := r.getNextSequence(ctx, "orders")
+	if err != nil {
+		return err
+	}
+
+	_, err = r.coll.InsertOne(ctx, orderDoc{
+		ID:    nextID,
+		Total: order.Total,
+	})
+	if err != nil {
+		return err
+	}
+	order.ID = uint(nextID)
+	return nil
+}
+
+func (r *MongoOrderRepository) FindAll() ([]*entities.Order, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cur, err := r.coll.Find(ctx, bson.D{})
+	if err != nil {
 		return nil, err
 	}
+	defer cur.Close(ctx)
 
-	orders := make([]*entities.Order, len(orderValues))
-	for i := range orderValues {
-		orders[i] = &orderValues[i]
+	var results []*entities.Order
+	for cur.Next(ctx) {
+		var d orderDoc
+		if err := cur.Decode(&d); err != nil {
+			return nil, err
+		}
+		results = append(results, &entities.Order{
+			ID:    uint(d.ID),
+			Total: d.Total,
+		})
 	}
-	return orders, nil
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
-func (r *GormOrderRepository) FindByID(id int) (*entities.Order, error) {
-	var order entities.Order
-	if err := r.db.First(&order, id).Error; err != nil {
+func (r *MongoOrderRepository) FindByID(id int) (*entities.Order, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var d orderDoc
+	err := r.coll.FindOne(ctx, bson.M{"_id": id}).Decode(&d)
+	if errors.Is(err, mongo.ErrNoDocuments) {
 		return &entities.Order{}, err
 	}
-	return &order, nil
+	if err != nil {
+		return nil, err
+	}
+	return &entities.Order{
+		ID:    uint(d.ID),
+		Total: d.Total,
+	}, nil
 }
 
-func (r *GormOrderRepository) Patch(id int, order *entities.Order) error {
-	result := r.db.Model(&entities.Order{}).Where("id = ?", id).Updates(order)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
+func (r *MongoOrderRepository) Patch(id int, order *entities.Order) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{}
+	update["total"] = order.Total
+
+	_, err := r.coll.UpdateByID(ctx, id, bson.M{"$set": update})
+	return err
 }
 
-func (r *GormOrderRepository) Delete(id int) error {
-	result := r.db.Delete(&entities.Order{}, id)
-	if result.Error != nil {
-		return result.Error
+func (r *MongoOrderRepository) Delete(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	return err
+}
+
+func (r *MongoOrderRepository) getNextSequence(ctx context.Context, name string) (int, error) {
+	counters := r.db.Collection("counters")
+	opts := options.FindOneAndUpdate().
+		SetUpsert(true).
+		SetReturnDocument(options.After)
+
+	var out counterDoc
+	err := counters.FindOneAndUpdate(
+		ctx,
+		bson.M{"_id": name},
+		bson.M{"$inc": bson.M{"seq": 1}},
+		opts,
+	).Decode(&out)
+
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		_, ierr := counters.InsertOne(ctx, counterDoc{ID: name, Seq: 1})
+		if ierr != nil {
+			return 0, ierr
+		}
+		return 1, nil
 	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+	if err != nil {
+		return 0, err
 	}
-	return nil
+	if out.Seq == 0 {
+		return 1, nil
+	}
+	return out.Seq, nil
 }
