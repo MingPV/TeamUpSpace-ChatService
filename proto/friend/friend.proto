@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package friend;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "proto/friend";
+
+message Friend {
+    int32 id = 1;
+    string user_id = 2;
+    string friend_id = 3;
+    bool is_friend = 4;
+    google.protobuf.Timestamp created_at = 5;     
+    google.protobuf.Timestamp updated_at = 6;    
+}
+
+message CreateFriendRequest {
+    string user_id = 1;
+    string friend_id = 2;
+    bool is_friend = 3;
+}
+
+message CreateFriendResponse {
+    Friend friend = 1;
+}
+
+message FindAllFriendsRequest {}
+
+message FindAllFriendsResponse {
+    repeated Friend friends = 1;
+}
+
+message FindAllFriendsByUserIDRequest {
+    string user_id = 1;
+}
+
+message FindAllFriendsByUserIDResponse {
+    repeated Friend friends = 1;
+}
+
+message FindAllFriendsByIsFriendRequest {
+    string user_id = 1;
+}
+
+message FindAllFriendsByIsFriendResponse {
+    repeated Friend friends = 1;
+}
+
+message FindAllFriendRequestsRequest {
+    string user_id = 1;
+}
+
+message FindAllFriendRequestsResponse {
+    repeated Friend friends = 1;
+}
+
+message DeleteFriendRequest {
+    int32 id = 1;
+}
+
+message DeleteFriendResponse {
+    string message = 1;
+}
+
+service FriendService {
+    rpc CreateFriend(CreateFriendRequest) returns (CreateFriendResponse);
+    rpc FindAllFriends(FindAllFriendsRequest) returns (FindAllFriendsResponse);
+    rpc FindAllFriendRequests(FindAllFriendRequestsRequest) returns (FindAllFriendRequestsResponse);
+    rpc FindAllFriendsByUserID(FindAllFriendsByUserIDRequest) returns (FindAllFriendsByUserIDResponse);
+    rpc FindAllFriendsByIsFriend(FindAllFriendsByIsFriendRequest) returns (FindAllFriendsByIsFriendResponse);
+    rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+}
+

@@ -8,11 +8,17 @@ import (
 	GrpcOrderHandler "github.com/MingPV/ChatService/internal/order/handler/grpc"
 	orderRepository "github.com/MingPV/ChatService/internal/order/repository"
 	orderUseCase "github.com/MingPV/ChatService/internal/order/usecase"
+	orderpb "github.com/MingPV/ChatService/proto/order"
+
+	GrpcFriendHandler "github.com/MingPV/ChatService/internal/friend/handler/grpc"
+	friendRepository "github.com/MingPV/ChatService/internal/friend/repository"
+	friendUseCase "github.com/MingPV/ChatService/internal/friend/usecase"
+	friendpb "github.com/MingPV/ChatService/proto/friend"
+
 	"github.com/MingPV/ChatService/pkg/config"
 	"github.com/MingPV/ChatService/pkg/database"
 	"github.com/MingPV/ChatService/pkg/middleware"
 	"github.com/MingPV/ChatService/pkg/routes"
-	orderpb "github.com/MingPV/ChatService/proto/order"
 )
 
 // rest
@@ -34,9 +40,16 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	// Dependency wiring for Orders using MongoDB
 	orderRepo := orderRepository.NewMongoOrderRepository(db)
 	orderService := orderUseCase.NewOrderService(orderRepo)
-
 	orderHandler := GrpcOrderHandler.NewGrpcOrderHandler(orderService)
 	orderpb.RegisterOrderServiceServer(s, orderHandler)
+
+	friendRepo := friendRepository.NewMongoFriendRepository(db)
+	friendService := friendUseCase.NewFriendService(friendRepo)
+	friendHandler := GrpcFriendHandler.NewGrpcFriendHandler(friendService)
+	friendpb.RegisterFriendServiceServer(s, friendHandler)
+
+
+
 	return s, nil
 }
 
@@ -48,6 +61,7 @@ func SetupDependencies(env string) (*mongo.Database, *config.Config, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 
 	return db, cfg, nil
 }
