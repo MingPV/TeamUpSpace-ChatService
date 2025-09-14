@@ -10,7 +10,7 @@ message Friend {
     int32 id = 1;
     string user_id = 2;
     string friend_id = 3;
-    bool is_friend = 4;
+    string status = 4;
     google.protobuf.Timestamp created_at = 5;     
     google.protobuf.Timestamp updated_at = 6;    
 }
@@ -18,7 +18,7 @@ message Friend {
 message CreateFriendRequest {
     string user_id = 1;
     string friend_id = 2;
-    bool is_friend = 3;
+    string status = 3;
 }
 
 message CreateFriendResponse {
@@ -55,12 +55,30 @@ message FindAllFriendRequestsResponse {
     repeated Friend friends = 1;
 }
 
+message IsMyFriendRequest {
+    string user_id = 1;
+    string friend_id = 2;
+}
+
+message IsMyFriendResponse {
+    string status = 1;
+}
+
 message DeleteFriendRequest {
     int32 id = 1;
 }
 
 message DeleteFriendResponse {
     string message = 1;
+}
+
+message AcceptFriendRequest {
+    string user_id = 1;
+    string friend_id = 2;
+}
+
+message AcceptFriendResponse {
+    Friend friend = 1;
 }
 
 service FriendService {
@@ -70,5 +88,7 @@ service FriendService {
     rpc FindAllFriendsByUserID(FindAllFriendsByUserIDRequest) returns (FindAllFriendsByUserIDResponse);
     rpc FindAllFriendsByIsFriend(FindAllFriendsByIsFriendRequest) returns (FindAllFriendsByIsFriendResponse);
     rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+    rpc IsMyFriend(IsMyFriendRequest) returns (IsMyFriendResponse);
+    rpc AcceptFriend(AcceptFriendRequest) returns (AcceptFriendResponse);
 }
 

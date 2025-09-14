@@ -29,7 +29,7 @@ type friendDoc struct {
 	ID    	  int    	`bson:"_id,omitempty"`
     UserID    uuid.UUID `bson:"user_id"`
     FriendID  uuid.UUID `bson:"friend_id"`
-    IsFriend  bool      `bson:"is_friend"`
+    Status    string    `bson:"status"`
     CreatedAt time.Time `bson:"created_at"`
     UpdatedAt time.Time `bson:"updated_at"`
 }
@@ -82,7 +82,7 @@ func (r *MongoFriendRepository)	Save(friend *entities.Friend) error {
 		ID: nextID,
 		UserID: friend.UserID,
 		FriendID: friend.FriendID,
-		IsFriend: friend.IsFriend,
+		Status: friend.Status,
 		CreatedAt: friend.CreatedAt,
 		UpdatedAt: friend.UpdatedAt,
 	})
@@ -115,7 +115,7 @@ func (r *MongoFriendRepository)	FindAll() ([]*entities.Friend, error){
 			ID: uint(d.ID),
 			UserID: d.UserID,
 			FriendID: d.FriendID,
-			IsFriend: d.IsFriend,
+			Status: d.Status,
 			CreatedAt: d.CreatedAt,
 			UpdatedAt: d.UpdatedAt,
 		})
@@ -129,7 +129,10 @@ func (r *MongoFriendRepository)	FindAllByUserId(userId uuid.UUID) ([]*entities.F
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"user_id": userId}
+	filter := bson.M{"$or": []bson.M{
+        {"user_id": userId},
+        {"friend_id": userId},
+    },}
 	cur, err := r.coll.Find(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -146,7 +149,7 @@ func (r *MongoFriendRepository)	FindAllByUserId(userId uuid.UUID) ([]*entities.F
 			ID: uint(d.ID),
 			UserID: d.UserID,
 			FriendID: d.FriendID,
-			IsFriend: d.IsFriend,
+			Status: d.Status,
 			CreatedAt: d.CreatedAt,
 			UpdatedAt: d.UpdatedAt,
 		})
@@ -162,7 +165,7 @@ func (r *MongoFriendRepository)	FindAllByIsFriend(userId uuid.UUID) ([]*entities
 	defer cancel()
 
 	filter := bson.M{
-		"is_friend": true,
+		"status": "friend",
 		"$or": []bson.M{
 			{"user_id": userId},
 			{"friend_id": userId},
@@ -184,7 +187,7 @@ func (r *MongoFriendRepository)	FindAllByIsFriend(userId uuid.UUID) ([]*entities
 			ID: uint(d.ID),
 			UserID: d.UserID,
 			FriendID: d.FriendID,
-			IsFriend: d.IsFriend,
+			Status: d.Status,
 			CreatedAt: d.CreatedAt,
 			UpdatedAt: d.UpdatedAt,
 		})
@@ -195,11 +198,53 @@ func (r *MongoFriendRepository)	FindAllByIsFriend(userId uuid.UUID) ([]*entities
 	return results, nil
 }
 
+func (r *MongoFriendRepository) IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"$or": []bson.M{
+			{
+				"user_id":   userId,
+				"friend_id": friendId,
+			},
+			{
+				"user_id":   friendId,
+				"friend_id": userId,
+			},
+		},
+	}
+
+	var friend *entities.Friend
+	err := r.coll.FindOne(ctx, filter).Decode(&friend)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return "not friend", nil
+		}
+		return "", err // real error
+	}
+
+	if friend.Status == "friend" {
+		return "friend", nil
+	}
+
+	if friend.Status == "pending" {
+		if friend.FriendID == userId {
+			return "asked", nil
+		}
+		if friend.UserID == userId {
+			return "pending", nil
+		}
+	}
+
+	return "not friend", nil //fallback
+}
+
 func (r *MongoFriendRepository) FindAllFriendRequests(userId uuid.UUID) ([]*entities.Friend, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.M{"is_friend": false, "user_id" : userId}
+	filter := bson.M{"status": "pending", "friend_id" : userId}
 	cur, err := r.coll.Find(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -214,9 +259,9 @@ func (r *MongoFriendRepository) FindAllFriendRequests(userId uuid.UUID) ([]*enti
 		}
 		results = append(results, &entities.Friend{
 			ID: uint(d.ID),
-			UserID: d.UserID,
-			FriendID: d.FriendID,
-			IsFriend: d.IsFriend,
+			UserID: d.FriendID,
+			FriendID: d.UserID,
+			Status: d.Status,
 			CreatedAt: d.CreatedAt,
 			UpdatedAt: d.UpdatedAt,
 		})
@@ -234,5 +279,40 @@ func (r *MongoFriendRepository) Delete(id uint) error {
     _, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
     return err
 }
+
+func (r *MongoFriendRepository) Update(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"user_id":   friendId,
+		"friend_id": userId,
+	}
+
+	update := bson.M{
+		"$set": bson.M{"status": "friend"},
+	}
+
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var updatedFriend entities.Friend
+	err := r.coll.FindOneAndUpdate(ctx, filter, update, opts).Decode(&updatedFriend)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return &updatedFriend, nil
+}
+
+
+
+
+
+//AllFriendRequesttoMe
+
+//pending, friend, request, add 
 
 

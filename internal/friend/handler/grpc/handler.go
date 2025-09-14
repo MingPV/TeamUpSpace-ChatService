@@ -35,7 +35,7 @@ func (h *GrpcFriendHandler) CreateFriend(ctx context.Context, req *friendpb.Crea
 	friend := &entities.Friend{
 		UserID: userUUID,
 		FriendID: friendUUID,
-		IsFriend: req.IsFriend,
+		Status: req.Status,
 	}
 
 	if err := h.friendUseCase.CreateFriend(friend); err != nil {
@@ -119,6 +119,36 @@ func (h *GrpcFriendHandler) DeleteFriend(ctx context.Context, req *friendpb.Dele
 	return &friendpb.DeleteFriendResponse{Message: "friend deleted"}, nil
 }
 
+func (h *GrpcFriendHandler) IsMyFriend(ctx context.Context, req *friendpb.IsMyFriendRequest) (*friendpb.IsMyFriendResponse, error) {
+	userUUID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+	friendUUID, err := uuid.Parse(req.FriendId)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+	
+	status, _ := h.friendUseCase.IsMyfriend(userUUID, friendUUID)
+	return &friendpb.IsMyFriendResponse{Status: status}, nil
+}
+
+func (h *GrpcFriendHandler) AcceptFriend(ctx context.Context, req *friendpb.AcceptFriendRequest) (*friendpb.AcceptFriendResponse, error){
+	userUUID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+	friendUUID, err := uuid.Parse(req.FriendId)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+
+	friend, err := h.friendUseCase.AcceptFriend(userUUID, friendUUID)
+	if err != nil {
+		return nil, err
+	}
+	return &friendpb.AcceptFriendResponse{Friend: toProtoFriend(friend)}, nil
+}
 
 
 func toProtoFriend(f *entities.Friend) *friendpb.Friend {
@@ -126,7 +156,7 @@ func toProtoFriend(f *entities.Friend) *friendpb.Friend {
 		Id:    int32(f.ID),
 		UserId: f.UserID.String(),
 		FriendId: f.FriendID.String(),
-		IsFriend: f.IsFriend,
+		Status: f.Status,
 		CreatedAt: timestamppb.New(f.CreatedAt),
 		UpdatedAt: timestamppb.New(f.CreatedAt),
 	}

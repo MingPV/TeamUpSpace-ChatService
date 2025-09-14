@@ -28,6 +28,8 @@ type FriendServiceClient interface {
 	FindAllFriendsByUserID(ctx context.Context, in *FindAllFriendsByUserIDRequest, opts ...grpc.CallOption) (*FindAllFriendsByUserIDResponse, error)
 	FindAllFriendsByIsFriend(ctx context.Context, in *FindAllFriendsByIsFriendRequest, opts ...grpc.CallOption) (*FindAllFriendsByIsFriendResponse, error)
 	DeleteFriend(ctx context.Context, in *DeleteFriendRequest, opts ...grpc.CallOption) (*DeleteFriendResponse, error)
+	IsMyFriend(ctx context.Context, in *IsMyFriendRequest, opts ...grpc.CallOption) (*IsMyFriendResponse, error)
+	AcceptFriend(ctx context.Context, in *AcceptFriendRequest, opts ...grpc.CallOption) (*AcceptFriendResponse, error)
 }
 
 type friendServiceClient struct {
@@ -92,6 +94,24 @@ func (c *friendServiceClient) DeleteFriend(ctx context.Context, in *DeleteFriend
 	return out, nil
 }
 
+func (c *friendServiceClient) IsMyFriend(ctx context.Context, in *IsMyFriendRequest, opts ...grpc.CallOption) (*IsMyFriendResponse, error) {
+	out := new(IsMyFriendResponse)
+	err := c.cc.Invoke(ctx, "/friend.FriendService/IsMyFriend", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) AcceptFriend(ctx context.Context, in *AcceptFriendRequest, opts ...grpc.CallOption) (*AcceptFriendResponse, error) {
+	out := new(AcceptFriendResponse)
+	err := c.cc.Invoke(ctx, "/friend.FriendService/AcceptFriend", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FriendServiceServer is the server API for FriendService service.
 // All implementations must embed UnimplementedFriendServiceServer
 // for forward compatibility
@@ -102,6 +122,8 @@ type FriendServiceServer interface {
 	FindAllFriendsByUserID(context.Context, *FindAllFriendsByUserIDRequest) (*FindAllFriendsByUserIDResponse, error)
 	FindAllFriendsByIsFriend(context.Context, *FindAllFriendsByIsFriendRequest) (*FindAllFriendsByIsFriendResponse, error)
 	DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error)
+	IsMyFriend(context.Context, *IsMyFriendRequest) (*IsMyFriendResponse, error)
+	AcceptFriend(context.Context, *AcceptFriendRequest) (*AcceptFriendResponse, error)
 	mustEmbedUnimplementedFriendServiceServer()
 }
 
@@ -126,6 +148,12 @@ func (UnimplementedFriendServiceServer) FindAllFriendsByIsFriend(context.Context
 }
 func (UnimplementedFriendServiceServer) DeleteFriend(context.Context, *DeleteFriendRequest) (*DeleteFriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFriend not implemented")
+}
+func (UnimplementedFriendServiceServer) IsMyFriend(context.Context, *IsMyFriendRequest) (*IsMyFriendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsMyFriend not implemented")
+}
+func (UnimplementedFriendServiceServer) AcceptFriend(context.Context, *AcceptFriendRequest) (*AcceptFriendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptFriend not implemented")
 }
 func (UnimplementedFriendServiceServer) mustEmbedUnimplementedFriendServiceServer() {}
 
@@ -248,6 +276,42 @@ func _FriendService_DeleteFriend_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FriendService_IsMyFriend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsMyFriendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).IsMyFriend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/friend.FriendService/IsMyFriend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).IsMyFriend(ctx, req.(*IsMyFriendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_AcceptFriend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptFriendRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).AcceptFriend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/friend.FriendService/AcceptFriend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).AcceptFriend(ctx, req.(*AcceptFriendRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FriendService_ServiceDesc is the grpc.ServiceDesc for FriendService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +342,14 @@ var FriendService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteFriend",
 			Handler:    _FriendService_DeleteFriend_Handler,
+		},
+		{
+			MethodName: "IsMyFriend",
+			Handler:    _FriendService_IsMyFriend_Handler,
+		},
+		{
+			MethodName: "AcceptFriend",
+			Handler:    _FriendService_AcceptFriend_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

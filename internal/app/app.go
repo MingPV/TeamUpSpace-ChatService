@@ -15,6 +15,11 @@ import (
 	friendUseCase "github.com/MingPV/ChatService/internal/friend/usecase"
 	friendpb "github.com/MingPV/ChatService/proto/friend"
 
+	GrpcMessageHandler "github.com/MingPV/ChatService/internal/message/handler/grpc"
+	messageRepository "github.com/MingPV/ChatService/internal/message/repository"
+	messageUseCase "github.com/MingPV/ChatService/internal/message/usecase"
+	messagepb "github.com/MingPV/ChatService/proto/message"
+
 	"github.com/MingPV/ChatService/pkg/config"
 	"github.com/MingPV/ChatService/pkg/database"
 	"github.com/MingPV/ChatService/pkg/middleware"
@@ -27,7 +32,7 @@ func SetupRestServer(db *mongo.Database, cfg *config.Config) (*fiber.App, error)
 	middleware.FiberMiddleware(app)
 	// comment out Swagger when testing
 	// routes.SwaggerRoute(app)
-	routes.RegisterPublicRoutes(app, db)
+	routes.RegisterPublicRoutes(app, db, cfg)
 	routes.RegisterPrivateRoutes(app, db)
 	routes.RegisterNotFoundRoute(app)
 	return app, nil
@@ -48,7 +53,11 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	friendHandler := GrpcFriendHandler.NewGrpcFriendHandler(friendService)
 	friendpb.RegisterFriendServiceServer(s, friendHandler)
 
-
+	// Message streaming service
+	msgRepo := messageRepository.NewMongoMessageRepository(db)
+	msgUseCase := messageUseCase.NewMessageService(msgRepo)
+	msgHandler := GrpcMessageHandler.NewGrpcMessageHandler(msgUseCase)
+	messagepb.RegisterMessageServiceServer(s, msgHandler)
 
 	return s, nil
 }
@@ -61,7 +70,6 @@ func SetupDependencies(env string) (*mongo.Database, *config.Config, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-
 
 	return db, cfg, nil
 }

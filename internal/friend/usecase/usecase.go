@@ -53,9 +53,25 @@ func (s *FriendService)	FindAllFriendsRequests(userId uuid.UUID) ([]*entities.Fr
 	return orders, nil
 }
 
+func (s *FriendService) IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error) {
+	status, err := s.repo.IsMyfriend(userId, friendId)
+	if err != nil {
+		return "", err
+	}
+	return status, nil
+}
+
 func (s *FriendService)	DeleteFriend(id uint) error {
 	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *FriendService) AcceptFriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
+	friend, err := s.repo.Update(userId, friendId)
+	if err != nil {
+		return nil, err
+	}
+	return friend, nil
 }
