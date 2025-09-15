@@ -70,7 +70,8 @@ func (h *GrpcFriendHandler) FindAllFriendsByUserID(ctx context.Context, req *fri
 
 	var protoFriends []*friendpb.Friend
 	for _, f := range friends {
-		protoFriends = append(protoFriends, toProtoFriend(f))
+		nf := normalizeFriend(f, userUUID)
+		protoFriends = append(protoFriends, toProtoFriend(nf))
 	}
 
 	return &friendpb.FindAllFriendsByUserIDResponse{Friends: protoFriends}, nil
@@ -88,7 +89,9 @@ func (h *GrpcFriendHandler) FindAllFriendsByIsFriend(ctx context.Context, req *f
 
 	var protoFriends []*friendpb.Friend
 	for _, f := range friends {
-		protoFriends = append(protoFriends, toProtoFriend(f))
+		nf := normalizeFriend(f, userUUID)
+		protoFriends = append(protoFriends, toProtoFriend(nf))
+
 	}
 
 	return &friendpb.FindAllFriendsByIsFriendResponse{Friends: protoFriends}, nil
@@ -161,5 +164,17 @@ func toProtoFriend(f *entities.Friend) *friendpb.Friend {
 		UpdatedAt: timestamppb.New(f.CreatedAt),
 	}
 }
+
+func normalizeFriend(f *entities.Friend, me uuid.UUID) *entities.Friend {
+	if f.UserID == me {
+		return f
+	}
+	return &entities.Friend{
+		UserID:   me,
+		FriendID: f.UserID,
+		Status:   f.Status,
+	}
+}
+
 
 
