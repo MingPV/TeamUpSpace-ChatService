@@ -25,6 +25,11 @@ import (
 	chatroomUseCase "github.com/MingPV/ChatService/internal/chatroom/usecase"
 	chatroompb "github.com/MingPV/ChatService/proto/chatroom"
 
+	GrpcRoomMemberHandler "github.com/MingPV/ChatService/internal/room_member/handler/grpc"
+	roommemberRepository "github.com/MingPV/ChatService/internal/room_member/repository"
+	roommemberUseCase "github.com/MingPV/ChatService/internal/room_member/usecase"
+	roommemberpb "github.com/MingPV/ChatService/proto/room_member"
+
 	"github.com/MingPV/ChatService/pkg/config"
 	"github.com/MingPV/ChatService/pkg/database"
 	"github.com/MingPV/ChatService/pkg/middleware"
@@ -62,6 +67,11 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	chatroomService := chatroomUseCase.NewChatroomService(chatroomRepo)
 	chatroomHandler := GrpcChatroomHandler.NewGrpcChatroomHandler(chatroomService)
 	chatroompb.RegisterChatroomServiceServer(s, chatroomHandler)
+
+	roommemberRepo := roommemberRepository.NewMongoRoomMemberRepository(db)
+	roommemberService := roommemberUseCase.NewRoomMemberService(roommemberRepo)
+	roommemberHandler := GrpcRoomMemberHandler.NewGrpcRoomMemberHandler(roommemberService)
+	roommemberpb.RegisterRoomMemberServiceServer(s, roommemberHandler)
 
 	// Message streaming service
 	msgRepo := messageRepository.NewMongoMessageRepository(db)

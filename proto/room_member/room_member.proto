@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package room_member;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "proto/room_member";
+
+message RoomMember {
+    int32 id = 1;
+    int32 room_id = 2;
+    string user_id = 3;
+    google.protobuf.Timestamp created_at = 4;     
+    google.protobuf.Timestamp updated_at = 5;   
+}
+
+message CreateRoomMembersRequest {
+    int32 room_id = 1;
+    repeated string user_ids = 2;
+}
+
+message CreateRoomMembersResponse {
+  repeated RoomMember members = 1;
+}
+
+message FindAllByRoomIDRequest {
+  int32 room_id = 1;
+}
+
+message FindAllByRoomIDResponse {
+  repeated RoomMember members = 1;
+}
+
+message FindAllByUserIDRequest {
+  string user_id = 1;
+}
+
+message FindAllByUserIDResponse {
+  repeated RoomMember chatrooms = 1;
+}
+
+message FindByRoomIDAndUserIDRequest {
+  int32 room_id = 1;
+  string user_id = 2;
+}
+
+message FindByRoomIDAndUserIDResponse {
+  RoomMember member = 1;
+}
+
+message DeleteByRoomIDAndUserIDRequest {
+  int32 room_id = 1;
+  string user_id = 2;
+}
+
+message DeleteByRoomIDAndUserIDResponse {
+  string message = 1;
+}
+
+message DeleteAllByRoomIDRequest {
+  int32 room_id = 1;
+}
+
+message DeleteAllByRoomIDResponse {
+  string message = 1;
+}
+
+
+service RoomMemberService {
+  rpc CreateRoomMembers(CreateRoomMembersRequest) returns (CreateRoomMembersResponse);
+  rpc FindAllByRoomID(FindAllByRoomIDRequest) returns (FindAllByRoomIDResponse);
+  rpc FindAllByUserID(FindAllByUserIDRequest) returns (FindAllByUserIDResponse);
+  rpc FindByRoomIDAndUserID(FindByRoomIDAndUserIDRequest) returns (FindByRoomIDAndUserIDResponse);
+  rpc DeleteByRoomIDAndUserID(DeleteByRoomIDAndUserIDRequest) returns (DeleteByRoomIDAndUserIDResponse);
+  rpc DeleteAllByRoomID(DeleteAllByRoomIDRequest) returns (DeleteAllByRoomIDResponse);
+}
+
