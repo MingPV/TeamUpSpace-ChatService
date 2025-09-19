@@ -11,5 +11,5 @@ type RoomMemberUseCase interface {
 	FindAllByUserID(userId uuid.UUID) ([]*entities.RoomMember, error)
 	FindByRoomIDAndUserID(roomId uint, userId uuid.UUID) (*entities.RoomMember, error)
 	DeleteByRoomIDAndUserID(roomId uint, userId uuid.UUID) error
-	DeleteAllByRoomID(roomId uint) error
+	DeleteAllByRoomID(roomId int) error
 }

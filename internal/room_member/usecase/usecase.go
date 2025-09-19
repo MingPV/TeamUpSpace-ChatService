@@ -59,7 +59,7 @@ func (s *RoomMemberService) DeleteByRoomIDAndUserID(roomId uint, userId uuid.UUI
 }
 
 // 5. Delete all members from a room
-func (s *RoomMemberService) DeleteAllByRoomID(roomId uint) error {
+func (s *RoomMemberService) DeleteAllByRoomID(roomId int) error {
 	if err := s.repo.DeleteAllByRoomID(roomId); err != nil {
 		return err
 	}

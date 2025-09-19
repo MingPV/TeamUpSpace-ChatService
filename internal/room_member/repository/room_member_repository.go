@@ -11,6 +11,6 @@ type RoomMemberRepository interface {
 	FindAllByUserID(userId uuid.UUID) ([]*entities.RoomMember, error)
 	FindAllByRoomIDAndUserID(roomId uint, userId uuid.UUID) (*entities.RoomMember, error)
 	DeleteByRoomIDAndUserID(roomID uint, userID uuid.UUID) error
-	DeleteAllByRoomID(roomID uint) error
+	DeleteAllByRoomID(roomID int) error
 }
 

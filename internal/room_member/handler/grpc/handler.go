@@ -84,7 +84,7 @@ func (h *GrpcRoomMemberHandler) DeleteByRoomIDAndUserID(ctx context.Context, req
 }
 
 func (h *GrpcRoomMemberHandler) DeleteAllByRoomID(ctx context.Context, req *roommemberpb.DeleteAllByRoomIDRequest) (*roommemberpb.DeleteAllByRoomIDResponse, error) {
-	if err := h.roomMemberUseCase.DeleteAllByRoomID(uint(req.RoomId)); err != nil {
+	if err := h.roomMemberUseCase.DeleteAllByRoomID(int(req.RoomId)); err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
 	return &roommemberpb.DeleteAllByRoomIDResponse{Message: "deleted chatroom"}, nil
