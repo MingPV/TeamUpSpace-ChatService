@@ -30,6 +30,11 @@ import (
 	roommemberUseCase "github.com/MingPV/ChatService/internal/room_member/usecase"
 	roommemberpb "github.com/MingPV/ChatService/proto/room_member"
 
+	GrpcRoomInviteHandler "github.com/MingPV/ChatService/internal/room_invite/handler/grpc"
+	roominviteRepository "github.com/MingPV/ChatService/internal/room_invite/repository"
+	roominviteUseCase "github.com/MingPV/ChatService/internal/room_invite/usecase"
+	roominvitepb "github.com/MingPV/ChatService/proto/room_invite"
+
 	"github.com/MingPV/ChatService/pkg/config"
 	"github.com/MingPV/ChatService/pkg/database"
 	"github.com/MingPV/ChatService/pkg/middleware"
@@ -68,6 +73,11 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	roommemberService := roommemberUseCase.NewRoomMemberService(roommemberRepo)
 	roommemberHandler := GrpcRoomMemberHandler.NewGrpcRoomMemberHandler(roommemberService)
 	roommemberpb.RegisterRoomMemberServiceServer(s, roommemberHandler)
+
+	roominviteRepo := roominviteRepository.NewMongoRoomInviteRepository(db)
+	roominviteService := roominviteUseCase.NewRoomInviteService(roominviteRepo)
+	roominviteHandler := GrpcRoomInviteHandler.NewGrpcRoomInviteHandler(roominviteService)
+	roominvitepb.RegisterRoomInviteServiceServer(s, roominviteHandler)
 	
 	chatroomRepo := chatroomRepository.NewMongoChatroomRepository(db)
 	chatroomService := chatroomUseCase.NewChatroomService(chatroomRepo, roommemberRepo)
