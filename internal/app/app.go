@@ -63,17 +63,13 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	orderHandler := GrpcOrderHandler.NewGrpcOrderHandler(orderService)
 	orderpb.RegisterOrderServiceServer(s, orderHandler)
 
-	friendRepo := friendRepository.NewMongoFriendRepository(db)
-	friendService := friendUseCase.NewFriendService(friendRepo)
-	friendHandler := GrpcFriendHandler.NewGrpcFriendHandler(friendService)
-	friendpb.RegisterFriendServiceServer(s, friendHandler)
-
+	
 	
 	roommemberRepo := roommemberRepository.NewMongoRoomMemberRepository(db)
 	roommemberService := roommemberUseCase.NewRoomMemberService(roommemberRepo)
 	roommemberHandler := GrpcRoomMemberHandler.NewGrpcRoomMemberHandler(roommemberService)
 	roommemberpb.RegisterRoomMemberServiceServer(s, roommemberHandler)
-
+	
 	roominviteRepo := roominviteRepository.NewMongoRoomInviteRepository(db)
 	roominviteService := roominviteUseCase.NewRoomInviteService(roominviteRepo)
 	roominviteHandler := GrpcRoomInviteHandler.NewGrpcRoomInviteHandler(roominviteService)
@@ -83,6 +79,11 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	chatroomService := chatroomUseCase.NewChatroomService(chatroomRepo, roommemberRepo)
 	chatroomHandler := GrpcChatroomHandler.NewGrpcChatroomHandler(chatroomService)
 	chatroompb.RegisterChatroomServiceServer(s, chatroomHandler)
+
+	friendRepo := friendRepository.NewMongoFriendRepository(db)
+	friendService := friendUseCase.NewFriendService(friendRepo, chatroomRepo, roommemberRepo)
+	friendHandler := GrpcFriendHandler.NewGrpcFriendHandler(friendService)
+	friendpb.RegisterFriendServiceServer(s, friendHandler)
 	// Message streaming service
 	msgRepo := messageRepository.NewMongoMessageRepository(db)
 	msgUseCase := messageUseCase.NewMessageService(msgRepo)
