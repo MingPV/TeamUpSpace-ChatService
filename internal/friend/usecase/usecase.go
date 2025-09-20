@@ -71,7 +71,16 @@ func (s *FriendService)	DeleteFriend(id uint) error {
 	if err := s.friendRepo.Delete(id); err != nil {
 		return err
 	}
+
 	return nil
+}
+
+func (s *FriendService) FindFriendByID(id int) (*entities.Friend, error) {
+	friend, err := s.friendRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return friend, nil
 }
 
 func (s *FriendService) AcceptFriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
