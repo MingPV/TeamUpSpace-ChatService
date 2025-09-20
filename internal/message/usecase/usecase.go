@@ -67,3 +67,10 @@ func (s *MessageService) SubscribeRoom(roomId int) (<-chan *entities.Message, fu
 
 	return ch, cleanup
 }
+
+func (s *MessageService) DeleteAllMessagesByRoomID(roomId int) error {
+	if err := s.repo.DeleteAllMessagesByRoomID(roomId); err != nil {
+		return err
+	}
+	return nil
+}

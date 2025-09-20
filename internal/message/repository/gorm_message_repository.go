@@ -126,3 +126,15 @@ func (r *MongoMessageRepository) FindAllByRoomID(roomId int) ([]*entities.Messag
 	}
 	return results, nil
 }
+
+func (r *MongoMessageRepository) DeleteAllMessagesByRoomID(roomId int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"room_id" : roomId,
+	}
+
+	_, err := r.coll.DeleteMany(ctx, filter)
+	return err
+}

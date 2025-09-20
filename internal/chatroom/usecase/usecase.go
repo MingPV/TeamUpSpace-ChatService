@@ -3,16 +3,18 @@ package usecase
 import (
 	chatroomRepo "github.com/MingPV/ChatService/internal/chatroom/repository"
 	"github.com/MingPV/ChatService/internal/entities"
+	messageRepo "github.com/MingPV/ChatService/internal/message/repository"
 	roommemberRepo "github.com/MingPV/ChatService/internal/room_member/repository"
 )
 
 type ChatroomService struct {
 	chatroomRepository chatroomRepo.ChatroomRepository
 	roommemberRepository roommemberRepo.RoomMemberRepository
+	messageRepository messageRepo.MessageRepository
 }
 
-func NewChatroomService(chatroomRepository chatroomRepo.ChatroomRepository, roommemberRepository roommemberRepo.RoomMemberRepository) ChatroomUseCase {
-	return &ChatroomService{chatroomRepository: chatroomRepository, roommemberRepository: roommemberRepository}
+func NewChatroomService(chatroomRepository chatroomRepo.ChatroomRepository, roommemberRepository roommemberRepo.RoomMemberRepository, messageRepository messageRepo.MessageRepository) ChatroomUseCase {
+	return &ChatroomService{chatroomRepository: chatroomRepository, roommemberRepository: roommemberRepository, messageRepository: messageRepository}
 }
 
 func (s *ChatroomService) CreateChatroom(chatroom *entities.Chatroom) error {
@@ -40,6 +42,10 @@ func (s *ChatroomService) PatchChatroom(id int, chatroom *entities.Chatroom) (*e
 
 func (s *ChatroomService) DeleteChatroom(id int) error {
 	if err := s.chatroomRepository.Delete(id); err != nil {
+		return err
+	}
+
+	if err := s.messageRepository.DeleteAllMessagesByRoomID(id); err != nil {
 		return err
 	}
 
