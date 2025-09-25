@@ -40,7 +40,7 @@ func NewRoomMemberServiceClient(cc grpc.ClientConnInterface) RoomMemberServiceCl
 
 func (c *roomMemberServiceClient) CreateRoomMembers(ctx context.Context, in *CreateRoomMembersRequest, opts ...grpc.CallOption) (*CreateRoomMembersResponse, error) {
 	out := new(CreateRoomMembersResponse)
-	err := c.cc.Invoke(ctx, "/room_member.RoomMemberService/CreateRoomMembers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/CreateRoomMembers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c *roomMemberServiceClient) CreateRoomMembers(ctx context.Context, in *Cre
 
 func (c *roomMemberServiceClient) FindAllByRoomID(ctx context.Context, in *FindAllByRoomIDRequest, opts ...grpc.CallOption) (*FindAllByRoomIDResponse, error) {
 	out := new(FindAllByRoomIDResponse)
-	err := c.cc.Invoke(ctx, "/room_member.RoomMemberService/FindAllByRoomID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/FindAllByRoomID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (c *roomMemberServiceClient) FindAllByRoomID(ctx context.Context, in *FindA
 
 func (c *roomMemberServiceClient) FindAllByUserID(ctx context.Context, in *FindAllByUserIDRequest, opts ...grpc.CallOption) (*FindAllByUserIDResponse, error) {
 	out := new(FindAllByUserIDResponse)
-	err := c.cc.Invoke(ctx, "/room_member.RoomMemberService/FindAllByUserID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/FindAllByUserID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (c *roomMemberServiceClient) FindAllByUserID(ctx context.Context, in *FindA
 
 func (c *roomMemberServiceClient) FindByRoomIDAndUserID(ctx context.Context, in *FindByRoomIDAndUserIDRequest, opts ...grpc.CallOption) (*FindByRoomIDAndUserIDResponse, error) {
 	out := new(FindByRoomIDAndUserIDResponse)
-	err := c.cc.Invoke(ctx, "/room_member.RoomMemberService/FindByRoomIDAndUserID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/FindByRoomIDAndUserID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (c *roomMemberServiceClient) FindByRoomIDAndUserID(ctx context.Context, in 
 
 func (c *roomMemberServiceClient) DeleteByRoomIDAndUserID(ctx context.Context, in *DeleteByRoomIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteByRoomIDAndUserIDResponse, error) {
 	out := new(DeleteByRoomIDAndUserIDResponse)
-	err := c.cc.Invoke(ctx, "/room_member.RoomMemberService/DeleteByRoomIDAndUserID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/DeleteByRoomIDAndUserID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (c *roomMemberServiceClient) DeleteByRoomIDAndUserID(ctx context.Context, i
 
 func (c *roomMemberServiceClient) DeleteAllByRoomID(ctx context.Context, in *DeleteAllByRoomIDRequest, opts ...grpc.CallOption) (*DeleteAllByRoomIDResponse, error) {
 	out := new(DeleteAllByRoomIDResponse)
-	err := c.cc.Invoke(ctx, "/room_member.RoomMemberService/DeleteAllByRoomID", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/DeleteAllByRoomID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func _RoomMemberService_CreateRoomMembers_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/room_member.RoomMemberService/CreateRoomMembers",
+		FullMethod: "/roommember.RoomMemberService/CreateRoomMembers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoomMemberServiceServer).CreateRoomMembers(ctx, req.(*CreateRoomMembersRequest))
@@ -168,7 +168,7 @@ func _RoomMemberService_FindAllByRoomID_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/room_member.RoomMemberService/FindAllByRoomID",
+		FullMethod: "/roommember.RoomMemberService/FindAllByRoomID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoomMemberServiceServer).FindAllByRoomID(ctx, req.(*FindAllByRoomIDRequest))
@@ -186,7 +186,7 @@ func _RoomMemberService_FindAllByUserID_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/room_member.RoomMemberService/FindAllByUserID",
+		FullMethod: "/roommember.RoomMemberService/FindAllByUserID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoomMemberServiceServer).FindAllByUserID(ctx, req.(*FindAllByUserIDRequest))
@@ -204,7 +204,7 @@ func _RoomMemberService_FindByRoomIDAndUserID_Handler(srv interface{}, ctx conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/room_member.RoomMemberService/FindByRoomIDAndUserID",
+		FullMethod: "/roommember.RoomMemberService/FindByRoomIDAndUserID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoomMemberServiceServer).FindByRoomIDAndUserID(ctx, req.(*FindByRoomIDAndUserIDRequest))
@@ -222,7 +222,7 @@ func _RoomMemberService_DeleteByRoomIDAndUserID_Handler(srv interface{}, ctx con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/room_member.RoomMemberService/DeleteByRoomIDAndUserID",
+		FullMethod: "/roommember.RoomMemberService/DeleteByRoomIDAndUserID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoomMemberServiceServer).DeleteByRoomIDAndUserID(ctx, req.(*DeleteByRoomIDAndUserIDRequest))
@@ -240,7 +240,7 @@ func _RoomMemberService_DeleteAllByRoomID_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/room_member.RoomMemberService/DeleteAllByRoomID",
+		FullMethod: "/roommember.RoomMemberService/DeleteAllByRoomID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RoomMemberServiceServer).DeleteAllByRoomID(ctx, req.(*DeleteAllByRoomIDRequest))
@@ -252,7 +252,7 @@ func _RoomMemberService_DeleteAllByRoomID_Handler(srv interface{}, ctx context.C
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var RoomMemberService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "room_member.RoomMemberService",
+	ServiceName: "roommember.RoomMemberService",
 	HandlerType: (*RoomMemberServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

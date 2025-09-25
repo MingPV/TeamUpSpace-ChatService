@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package room_member;
+package roommember;
 
 import "google/protobuf/timestamp.proto";
 

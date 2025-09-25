@@ -99,7 +99,7 @@ func (h *GrpcMessageHandler) Chat(stream messagepb.MessageService_ChatServer) er
     }
 }
 
-func (h *GrpcMessageHandler) FindAllMessageByRoomID(ctx context.Context, req *messagepb.FindAllMessageByRoomIDRequest) (*messagepb.FindAllMesageByRoomIDResponse, error) {
+func (h *GrpcMessageHandler) FindAllMessageByRoomID(ctx context.Context, req *messagepb.FindAllMessageByRoomIDRequest) (*messagepb.FindAllMessageByRoomIDResponse, error) {
     messages, err := h.messageUseCase.FindAllByRoomID(int(req.RoomId))
     if err != nil {
         return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
@@ -110,7 +110,7 @@ func (h *GrpcMessageHandler) FindAllMessageByRoomID(ctx context.Context, req *me
         protoMessages = append(protoMessages, toProtoMessage(m))
     }
 
-    return &messagepb.FindAllMesageByRoomIDResponse{Message: protoMessages}, nil
+    return &messagepb.FindAllMessageByRoomIDResponse{Message: protoMessages}, nil
 
 }
 

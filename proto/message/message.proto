@@ -56,13 +56,13 @@ message FindAllMessageByRoomIDRequest {
   int32 room_id = 1;
 }
 
-message FindAllMesageByRoomIDResponse {
+message FindAllMessageByRoomIDResponse {
   repeated Message message = 1;
 }
 
 service MessageService {
   rpc Chat(stream ClientEvent) returns (stream ServerEvent);
-  rpc FindAllMessageByRoomID(FindAllMessageByRoomIDRequest) returns (FindAllMesageByRoomIDResponse);
+  rpc FindAllMessageByRoomID(FindAllMessageByRoomIDRequest) returns (FindAllMessageByRoomIDResponse);
 }
 
 

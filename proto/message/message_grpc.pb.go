@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MessageServiceClient interface {
 	Chat(ctx context.Context, opts ...grpc.CallOption) (MessageService_ChatClient, error)
-	FindAllMessageByRoomID(ctx context.Context, in *FindAllMessageByRoomIDRequest, opts ...grpc.CallOption) (*FindAllMesageByRoomIDResponse, error)
+	FindAllMessageByRoomID(ctx context.Context, in *FindAllMessageByRoomIDRequest, opts ...grpc.CallOption) (*FindAllMessageByRoomIDResponse, error)
 }
 
 type messageServiceClient struct {
@@ -65,8 +65,8 @@ func (x *messageServiceChatClient) Recv() (*ServerEvent, error) {
 	return m, nil
 }
 
-func (c *messageServiceClient) FindAllMessageByRoomID(ctx context.Context, in *FindAllMessageByRoomIDRequest, opts ...grpc.CallOption) (*FindAllMesageByRoomIDResponse, error) {
-	out := new(FindAllMesageByRoomIDResponse)
+func (c *messageServiceClient) FindAllMessageByRoomID(ctx context.Context, in *FindAllMessageByRoomIDRequest, opts ...grpc.CallOption) (*FindAllMessageByRoomIDResponse, error) {
+	out := new(FindAllMessageByRoomIDResponse)
 	err := c.cc.Invoke(ctx, "/message.MessageService/FindAllMessageByRoomID", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (c *messageServiceClient) FindAllMessageByRoomID(ctx context.Context, in *F
 // for forward compatibility
 type MessageServiceServer interface {
 	Chat(MessageService_ChatServer) error
-	FindAllMessageByRoomID(context.Context, *FindAllMessageByRoomIDRequest) (*FindAllMesageByRoomIDResponse, error)
+	FindAllMessageByRoomID(context.Context, *FindAllMessageByRoomIDRequest) (*FindAllMessageByRoomIDResponse, error)
 	mustEmbedUnimplementedMessageServiceServer()
 }
 
@@ -90,7 +90,7 @@ type UnimplementedMessageServiceServer struct {
 func (UnimplementedMessageServiceServer) Chat(MessageService_ChatServer) error {
 	return status.Errorf(codes.Unimplemented, "method Chat not implemented")
 }
-func (UnimplementedMessageServiceServer) FindAllMessageByRoomID(context.Context, *FindAllMessageByRoomIDRequest) (*FindAllMesageByRoomIDResponse, error) {
+func (UnimplementedMessageServiceServer) FindAllMessageByRoomID(context.Context, *FindAllMessageByRoomIDRequest) (*FindAllMessageByRoomIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindAllMessageByRoomID not implemented")
 }
 func (UnimplementedMessageServiceServer) mustEmbedUnimplementedMessageServiceServer() {}
