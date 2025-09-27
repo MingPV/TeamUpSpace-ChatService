@@ -28,6 +28,7 @@ type RoomMemberServiceClient interface {
 	FindByRoomIDAndUserID(ctx context.Context, in *FindByRoomIDAndUserIDRequest, opts ...grpc.CallOption) (*FindByRoomIDAndUserIDResponse, error)
 	DeleteByRoomIDAndUserID(ctx context.Context, in *DeleteByRoomIDAndUserIDRequest, opts ...grpc.CallOption) (*DeleteByRoomIDAndUserIDResponse, error)
 	DeleteAllByRoomID(ctx context.Context, in *DeleteAllByRoomIDRequest, opts ...grpc.CallOption) (*DeleteAllByRoomIDResponse, error)
+	DeleteRoomMember(ctx context.Context, in *DeleteRoomMemberRequest, opts ...grpc.CallOption) (*DeleteRoomMemberResponse, error)
 }
 
 type roomMemberServiceClient struct {
@@ -92,6 +93,15 @@ func (c *roomMemberServiceClient) DeleteAllByRoomID(ctx context.Context, in *Del
 	return out, nil
 }
 
+func (c *roomMemberServiceClient) DeleteRoomMember(ctx context.Context, in *DeleteRoomMemberRequest, opts ...grpc.CallOption) (*DeleteRoomMemberResponse, error) {
+	out := new(DeleteRoomMemberResponse)
+	err := c.cc.Invoke(ctx, "/roommember.RoomMemberService/DeleteRoomMember", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomMemberServiceServer is the server API for RoomMemberService service.
 // All implementations must embed UnimplementedRoomMemberServiceServer
 // for forward compatibility
@@ -102,6 +112,7 @@ type RoomMemberServiceServer interface {
 	FindByRoomIDAndUserID(context.Context, *FindByRoomIDAndUserIDRequest) (*FindByRoomIDAndUserIDResponse, error)
 	DeleteByRoomIDAndUserID(context.Context, *DeleteByRoomIDAndUserIDRequest) (*DeleteByRoomIDAndUserIDResponse, error)
 	DeleteAllByRoomID(context.Context, *DeleteAllByRoomIDRequest) (*DeleteAllByRoomIDResponse, error)
+	DeleteRoomMember(context.Context, *DeleteRoomMemberRequest) (*DeleteRoomMemberResponse, error)
 	mustEmbedUnimplementedRoomMemberServiceServer()
 }
 
@@ -126,6 +137,9 @@ func (UnimplementedRoomMemberServiceServer) DeleteByRoomIDAndUserID(context.Cont
 }
 func (UnimplementedRoomMemberServiceServer) DeleteAllByRoomID(context.Context, *DeleteAllByRoomIDRequest) (*DeleteAllByRoomIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAllByRoomID not implemented")
+}
+func (UnimplementedRoomMemberServiceServer) DeleteRoomMember(context.Context, *DeleteRoomMemberRequest) (*DeleteRoomMemberResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRoomMember not implemented")
 }
 func (UnimplementedRoomMemberServiceServer) mustEmbedUnimplementedRoomMemberServiceServer() {}
 
@@ -248,6 +262,24 @@ func _RoomMemberService_DeleteAllByRoomID_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomMemberService_DeleteRoomMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRoomMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomMemberServiceServer).DeleteRoomMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roommember.RoomMemberService/DeleteRoomMember",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomMemberServiceServer).DeleteRoomMember(ctx, req.(*DeleteRoomMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomMemberService_ServiceDesc is the grpc.ServiceDesc for RoomMemberService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +310,10 @@ var RoomMemberService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAllByRoomID",
 			Handler:    _RoomMemberService_DeleteAllByRoomID_Handler,
+		},
+		{
+			MethodName: "DeleteRoomMember",
+			Handler:    _RoomMemberService_DeleteRoomMember_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

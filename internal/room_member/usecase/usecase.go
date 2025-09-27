@@ -65,3 +65,10 @@ func (s *RoomMemberService) DeleteAllByRoomID(roomId int) error {
 	}
 	return nil
 }
+
+func (s *RoomMemberService) DeleteRoomMember(id int) error {
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+	return nil
+}

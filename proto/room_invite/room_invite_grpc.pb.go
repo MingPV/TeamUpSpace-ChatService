@@ -25,9 +25,11 @@ type RoomInviteServiceClient interface {
 	CreateRoomInvite(ctx context.Context, in *CreateRoomInviteRequest, opts ...grpc.CallOption) (*CreateRoomInviteResponse, error)
 	FindRoomInviteByID(ctx context.Context, in *FindRoomInviteByIDRequest, opts ...grpc.CallOption) (*FindRoomInviteByIDResponse, error)
 	FindAllRoomInvitesBySender(ctx context.Context, in *FindAllRoomInvitesBySenderRequest, opts ...grpc.CallOption) (*FindAllRoomInvitesBySenderResponse, error)
+	FindAllRoomInvitesByRoomID(ctx context.Context, in *FindAllRoomInvitesByRoomIDRequest, opts ...grpc.CallOption) (*FindAllRoomInvitesByRoomIDResponse, error)
 	FindAllRoomInvitesByInviteTo(ctx context.Context, in *FindAllRoomInvitesByInviteToRequest, opts ...grpc.CallOption) (*FindAllRoomInvitesByInviteToResponse, error)
 	PatchRoomInvite(ctx context.Context, in *PatchRoomInviteRequest, opts ...grpc.CallOption) (*PatchRoomInviteResponse, error)
 	DeleteRoomInvite(ctx context.Context, in *DeleteRoomInviteRequest, opts ...grpc.CallOption) (*DeleteRoomInviteResponse, error)
+	AcceptedRoomInvite(ctx context.Context, in *AcceptedRoomInviteRequest, opts ...grpc.CallOption) (*AcceptedRoomInviteResponse, error)
 }
 
 type roomInviteServiceClient struct {
@@ -65,6 +67,15 @@ func (c *roomInviteServiceClient) FindAllRoomInvitesBySender(ctx context.Context
 	return out, nil
 }
 
+func (c *roomInviteServiceClient) FindAllRoomInvitesByRoomID(ctx context.Context, in *FindAllRoomInvitesByRoomIDRequest, opts ...grpc.CallOption) (*FindAllRoomInvitesByRoomIDResponse, error) {
+	out := new(FindAllRoomInvitesByRoomIDResponse)
+	err := c.cc.Invoke(ctx, "/roominvite.RoomInviteService/FindAllRoomInvitesByRoomID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *roomInviteServiceClient) FindAllRoomInvitesByInviteTo(ctx context.Context, in *FindAllRoomInvitesByInviteToRequest, opts ...grpc.CallOption) (*FindAllRoomInvitesByInviteToResponse, error) {
 	out := new(FindAllRoomInvitesByInviteToResponse)
 	err := c.cc.Invoke(ctx, "/roominvite.RoomInviteService/FindAllRoomInvitesByInviteTo", in, out, opts...)
@@ -92,6 +103,15 @@ func (c *roomInviteServiceClient) DeleteRoomInvite(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *roomInviteServiceClient) AcceptedRoomInvite(ctx context.Context, in *AcceptedRoomInviteRequest, opts ...grpc.CallOption) (*AcceptedRoomInviteResponse, error) {
+	out := new(AcceptedRoomInviteResponse)
+	err := c.cc.Invoke(ctx, "/roominvite.RoomInviteService/AcceptedRoomInvite", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RoomInviteServiceServer is the server API for RoomInviteService service.
 // All implementations must embed UnimplementedRoomInviteServiceServer
 // for forward compatibility
@@ -99,9 +119,11 @@ type RoomInviteServiceServer interface {
 	CreateRoomInvite(context.Context, *CreateRoomInviteRequest) (*CreateRoomInviteResponse, error)
 	FindRoomInviteByID(context.Context, *FindRoomInviteByIDRequest) (*FindRoomInviteByIDResponse, error)
 	FindAllRoomInvitesBySender(context.Context, *FindAllRoomInvitesBySenderRequest) (*FindAllRoomInvitesBySenderResponse, error)
+	FindAllRoomInvitesByRoomID(context.Context, *FindAllRoomInvitesByRoomIDRequest) (*FindAllRoomInvitesByRoomIDResponse, error)
 	FindAllRoomInvitesByInviteTo(context.Context, *FindAllRoomInvitesByInviteToRequest) (*FindAllRoomInvitesByInviteToResponse, error)
 	PatchRoomInvite(context.Context, *PatchRoomInviteRequest) (*PatchRoomInviteResponse, error)
 	DeleteRoomInvite(context.Context, *DeleteRoomInviteRequest) (*DeleteRoomInviteResponse, error)
+	AcceptedRoomInvite(context.Context, *AcceptedRoomInviteRequest) (*AcceptedRoomInviteResponse, error)
 	mustEmbedUnimplementedRoomInviteServiceServer()
 }
 
@@ -118,6 +140,9 @@ func (UnimplementedRoomInviteServiceServer) FindRoomInviteByID(context.Context, 
 func (UnimplementedRoomInviteServiceServer) FindAllRoomInvitesBySender(context.Context, *FindAllRoomInvitesBySenderRequest) (*FindAllRoomInvitesBySenderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindAllRoomInvitesBySender not implemented")
 }
+func (UnimplementedRoomInviteServiceServer) FindAllRoomInvitesByRoomID(context.Context, *FindAllRoomInvitesByRoomIDRequest) (*FindAllRoomInvitesByRoomIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindAllRoomInvitesByRoomID not implemented")
+}
 func (UnimplementedRoomInviteServiceServer) FindAllRoomInvitesByInviteTo(context.Context, *FindAllRoomInvitesByInviteToRequest) (*FindAllRoomInvitesByInviteToResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindAllRoomInvitesByInviteTo not implemented")
 }
@@ -126,6 +151,9 @@ func (UnimplementedRoomInviteServiceServer) PatchRoomInvite(context.Context, *Pa
 }
 func (UnimplementedRoomInviteServiceServer) DeleteRoomInvite(context.Context, *DeleteRoomInviteRequest) (*DeleteRoomInviteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRoomInvite not implemented")
+}
+func (UnimplementedRoomInviteServiceServer) AcceptedRoomInvite(context.Context, *AcceptedRoomInviteRequest) (*AcceptedRoomInviteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptedRoomInvite not implemented")
 }
 func (UnimplementedRoomInviteServiceServer) mustEmbedUnimplementedRoomInviteServiceServer() {}
 
@@ -194,6 +222,24 @@ func _RoomInviteService_FindAllRoomInvitesBySender_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInviteService_FindAllRoomInvitesByRoomID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindAllRoomInvitesByRoomIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInviteServiceServer).FindAllRoomInvitesByRoomID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roominvite.RoomInviteService/FindAllRoomInvitesByRoomID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInviteServiceServer).FindAllRoomInvitesByRoomID(ctx, req.(*FindAllRoomInvitesByRoomIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RoomInviteService_FindAllRoomInvitesByInviteTo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FindAllRoomInvitesByInviteToRequest)
 	if err := dec(in); err != nil {
@@ -248,6 +294,24 @@ func _RoomInviteService_DeleteRoomInvite_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RoomInviteService_AcceptedRoomInvite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptedRoomInviteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomInviteServiceServer).AcceptedRoomInvite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/roominvite.RoomInviteService/AcceptedRoomInvite",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomInviteServiceServer).AcceptedRoomInvite(ctx, req.(*AcceptedRoomInviteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RoomInviteService_ServiceDesc is the grpc.ServiceDesc for RoomInviteService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -268,6 +332,10 @@ var RoomInviteService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RoomInviteService_FindAllRoomInvitesBySender_Handler,
 		},
 		{
+			MethodName: "FindAllRoomInvitesByRoomID",
+			Handler:    _RoomInviteService_FindAllRoomInvitesByRoomID_Handler,
+		},
+		{
 			MethodName: "FindAllRoomInvitesByInviteTo",
 			Handler:    _RoomInviteService_FindAllRoomInvitesByInviteTo_Handler,
 		},
@@ -278,6 +346,10 @@ var RoomInviteService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteRoomInvite",
 			Handler:    _RoomInviteService_DeleteRoomInvite_Handler,
+		},
+		{
+			MethodName: "AcceptedRoomInvite",
+			Handler:    _RoomInviteService_AcceptedRoomInvite_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -98,7 +98,26 @@ func (r *MongoRoomMemberRepository) FindAllByUserID(userId uuid.UUID) ([]*entiti
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cur, err := r.coll.Find(ctx, bson.M{"user_id": userId})
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"user_id": userId}}},
+		{{
+			Key: "$lookup", Value: bson.M{
+				"from":         "chatrooms", // collection ของห้อง
+				"localField":   "room_id",   // room_id ใน room_members
+				"foreignField": "_id",       // _id ใน chatrooms
+				"as":           "room",      // output field ที่ map เข้า struct
+			},
+		}},
+		{{
+			Key: "$unwind", Value: bson.M{
+				"path":                       "$room",
+				"preserveNullAndEmptyArrays": true,
+			},
+		}},
+	}
+
+	// ต้องใช้ Aggregate แทน Find
+	cur, err := r.coll.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -106,23 +125,20 @@ func (r *MongoRoomMemberRepository) FindAllByUserID(userId uuid.UUID) ([]*entiti
 
 	var results []*entities.RoomMember
 	for cur.Next(ctx) {
-		var d roomMemberDoc
+		var d entities.RoomMember
 		if err := cur.Decode(&d); err != nil {
 			return nil, err
 		}
-		results = append(results, &entities.RoomMember{
-			ID:        uint(d.ID),
-			RoomId:    d.RoomId,
-			UserId:    d.UserId,
-			CreatedAt: d.CreatedAt,
-			UpdatedAt: d.UpdatedAt,
-		})
+		results = append(results, &d)
 	}
+
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
+
 	return results, nil
 }
+
 
 // FindAllByRoomIDAndUserID returns a single member in a room
 func (r *MongoRoomMemberRepository) FindAllByRoomIDAndUserID(roomId uint, userId uuid.UUID) (*entities.RoomMember, error) {
@@ -195,4 +211,12 @@ func (r *MongoRoomMemberRepository) getNextSequence(ctx context.Context, name st
 		return 1, nil
 	}
 	return out.Seq, nil
+}
+
+func (r *MongoRoomMemberRepository) Delete(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
+	return err
 }

@@ -170,6 +170,7 @@ func normalizeFriend(f *entities.Friend, me uuid.UUID) *entities.Friend {
 		return f
 	}
 	return &entities.Friend{
+		ID: f.ID,
 		UserID:   me,
 		FriendID: f.UserID,
 		Status:   f.Status,

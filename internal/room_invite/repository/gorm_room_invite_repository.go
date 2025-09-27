@@ -106,6 +106,28 @@ func (r *MongoRoomInviteRepository) FindAllBySender(sender uuid.UUID) ([]*entiti
 	return results, cur.Err()
 }
 
+func (r *MongoRoomInviteRepository) FindAllByRoomId(roomId int) ([]*entities.RoomInvite, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cur, err := r.coll.Find(ctx, bson.M{"room_id": roomId})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var results []*entities.RoomInvite
+	for cur.Next(ctx) {
+		var d roomInviteDoc
+		if err := cur.Decode(&d); err != nil {
+			return nil, err
+		}
+		results = append(results, r.toEntity(d))
+	}
+	return results, cur.Err()
+}
+
+
 func (r *MongoRoomInviteRepository) FindAllByInviteTo(inviteTo uuid.UUID) ([]*entities.RoomInvite, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

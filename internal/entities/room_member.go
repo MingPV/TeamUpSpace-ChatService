@@ -12,4 +12,6 @@ type RoomMember struct {
 	UserId 		uuid.UUID	`json:"user_id" bson:"user_id"`
 	CreatedAt 	time.Time 	`json:"created_at" bson:"created_at"`
     UpdatedAt 	time.Time 	`json:"updated_at" bson:"updated_at"`
+
+	Chatroom 	Chatroom `json:"room" bson:"room,omitempty"`
 }

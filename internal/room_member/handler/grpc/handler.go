@@ -90,6 +90,12 @@ func (h *GrpcRoomMemberHandler) DeleteAllByRoomID(ctx context.Context, req *room
 	return &roommemberpb.DeleteAllByRoomIDResponse{Message: "deleted chatroom"}, nil
 }
 
+func (h *GrpcRoomMemberHandler) DeleteRoomMember(ctx context.Context, req *roommemberpb.DeleteRoomMemberRequest) (*roommemberpb.DeleteRoomMemberResponse, error) {
+	if err := h.roomMemberUseCase.DeleteRoomMember(int(req.Id)); err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+	return &roommemberpb.DeleteRoomMemberResponse{Message: "deleted chatroom"}, nil
+}
 // ---- Helper functions ----
 
 func toProtoRoomMember(m *entities.RoomMember) *roommemberpb.RoomMember {
@@ -97,8 +103,17 @@ func toProtoRoomMember(m *entities.RoomMember) *roommemberpb.RoomMember {
 		Id:        int32(m.ID),
 		RoomId:    int32(m.RoomId),
 		UserId:    m.UserId.String(),
+		Chatroom: 	&roommemberpb.Chatroom{
+			Id: int32(m.Chatroom.ID),
+			RoomName: m.Chatroom.RoomName,
+			IsGroup: m.Chatroom.IsGroup,
+			Owner: m.Chatroom.Owner.String(),
+			CreatedAt: timestamppb.New(m.Chatroom.CreatedAt),
+			UpdatedAt: timestamppb.New(m.Chatroom.UpdatedAt),
+    	},
 		CreatedAt: timestamppb.New(m.CreatedAt),
 		UpdatedAt: timestamppb.New(m.UpdatedAt),
+		
 	}
 }
 

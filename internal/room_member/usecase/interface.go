@@ -12,4 +12,5 @@ type RoomMemberUseCase interface {
 	FindByRoomIDAndUserID(roomId uint, userId uuid.UUID) (*entities.RoomMember, error)
 	DeleteByRoomIDAndUserID(roomId uint, userId uuid.UUID) error
 	DeleteAllByRoomID(roomId int) error
+	DeleteRoomMember(id int) error
 }

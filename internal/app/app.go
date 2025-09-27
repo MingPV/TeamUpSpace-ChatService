@@ -71,7 +71,7 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	roommemberpb.RegisterRoomMemberServiceServer(s, roommemberHandler)
 	
 	roominviteRepo := roominviteRepository.NewMongoRoomInviteRepository(db)
-	roominviteService := roominviteUseCase.NewRoomInviteService(roominviteRepo)
+	roominviteService := roominviteUseCase.NewRoomInviteService(roominviteRepo, roommemberRepo)
 	roominviteHandler := GrpcRoomInviteHandler.NewGrpcRoomInviteHandler(roominviteService)
 	roominvitepb.RegisterRoomInviteServiceServer(s, roominviteHandler)
 	

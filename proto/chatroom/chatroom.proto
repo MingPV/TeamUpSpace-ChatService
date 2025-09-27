@@ -10,13 +10,15 @@ message Chatroom {
     int32 id = 1;
     string room_name = 2;
     bool is_group = 3;
-    google.protobuf.Timestamp created_at = 4;     
-    google.protobuf.Timestamp updated_at = 5;   
+    string owner = 4;
+    google.protobuf.Timestamp created_at = 5;     
+    google.protobuf.Timestamp updated_at = 6;   
 }
 
 message CreateChatroomRequest {
     string room_name = 1;
     bool is_group = 2;
+    string owner = 3;
 }
 
 message CreateChatroomResponse {
@@ -35,6 +37,7 @@ message PatchChatroomRequest {
     int32 id = 1;
     string room_name = 2;
     bool is_group = 3;
+    string owner = 4;
 }
 
 message PatchChatroomResponse {

@@ -66,6 +66,20 @@ func (h *GrpcRoomInviteHandler) FindAllRoomInvitesBySender(ctx context.Context, 
 	return &roominvitepb.FindAllRoomInvitesBySenderResponse{Invites: protoInvites}, nil
 }
 
+func (h *GrpcRoomInviteHandler) FindAllRoomInvitesByRoomID(ctx context.Context, req *roominvitepb.FindAllRoomInvitesByRoomIDRequest) (*roominvitepb.FindAllRoomInvitesByRoomIDResponse, error) {
+	invites, err := h.roomInviteUseCase.FindAllByRoomId(int(req.RoomId))
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+
+	var protoInvites []*roominvitepb.RoomInvite
+	for _, inv := range invites {
+		protoInvites = append(protoInvites, toProtoRoomInvite(inv))
+	}
+
+	return &roominvitepb.FindAllRoomInvitesByRoomIDResponse{Invites: protoInvites}, nil
+}
+
 func (h *GrpcRoomInviteHandler) FindAllRoomInvitesByInviteTo(ctx context.Context, req *roominvitepb.FindAllRoomInvitesByInviteToRequest) (*roominvitepb.FindAllRoomInvitesByInviteToResponse, error) {
 	invites, err := h.roomInviteUseCase.FindAllByInviteTo(uuid.MustParse(req.InviteTo))
 	if err != nil {
@@ -104,6 +118,14 @@ func (h *GrpcRoomInviteHandler) DeleteRoomInvite(ctx context.Context, req *roomi
 	}
 	return &roominvitepb.DeleteRoomInviteResponse{Message: "room invite deleted"}, nil
 }
+
+func (h *GrpcRoomInviteHandler) AcceptedRoomInvite(ctx context.Context, req *roominvitepb.AcceptedRoomInviteRequest) (*roominvitepb.AcceptedRoomInviteResponse, error) {
+	if err := h.roomInviteUseCase.AcceptedInvite(int(req.Id)); err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+	return &roominvitepb.AcceptedRoomInviteResponse{Message: "room invite accepted"}, nil
+}
+
 
 // ------------------ Helpers ------------------
 

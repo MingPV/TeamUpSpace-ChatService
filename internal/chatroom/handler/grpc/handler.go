@@ -7,6 +7,7 @@ import (
 	"github.com/MingPV/ChatService/internal/entities"
 	"github.com/MingPV/ChatService/pkg/apperror"
 	chatroompb "github.com/MingPV/ChatService/proto/chatroom"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -21,9 +22,14 @@ func NewGrpcChatroomHandler(uc usecase.ChatroomUseCase) *GrpcChatroomHandler {
 }
 
 func (h *GrpcChatroomHandler) CreateChatroom(ctx context.Context, req *chatroompb.CreateChatroomRequest) (*chatroompb.CreateChatroomResponse, error) {
+	ownerUUID, err := uuid.Parse(req.Owner)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
 	chatroom := &entities.Chatroom{
 		RoomName: req.RoomName,
 		IsGroup: req.IsGroup,
+		Owner: ownerUUID,
 	}
 
 	if err := h.chatroomUseCase.CreateChatroom(chatroom); err != nil {
@@ -41,9 +47,14 @@ func (h *GrpcChatroomHandler) FindChatroomByID(ctx context.Context, req *chatroo
 }
 
 func (h *GrpcChatroomHandler) PatchChatroom(ctx context.Context, req *chatroompb.PatchChatroomRequest) (*chatroompb.PatchChatroomResponse, error){
+	ownerUUID, err := uuid.Parse(req.Owner)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
 	chatroom := &entities.Chatroom{
 		RoomName: req.RoomName,
 		IsGroup: req.IsGroup,
+		Owner: ownerUUID,
 	}
 	updatedChatroom, err := h.chatroomUseCase.PatchChatroom(int(req.Id), chatroom)
 	if err != nil {
@@ -60,10 +71,13 @@ func (h *GrpcChatroomHandler) DeleteChatroom(ctx context.Context, req *chatroomp
 }
 
 func toProtoChatroom(ch *entities.Chatroom) *chatroompb.Chatroom {
+
+
 	return &chatroompb.Chatroom{
 		Id: int32(ch.ID),
 		RoomName: ch.RoomName,
 		IsGroup: ch.IsGroup,
+		Owner: ch.Owner.String(),
 		CreatedAt: timestamppb.New(ch.CreatedAt),
 		UpdatedAt: timestamppb.New(ch.UpdatedAt),
 	}

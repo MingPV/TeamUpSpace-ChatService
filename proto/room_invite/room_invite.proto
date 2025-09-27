@@ -45,6 +45,14 @@ message FindAllRoomInvitesBySenderResponse {
   repeated RoomInvite invites = 1;
 }
 
+message FindAllRoomInvitesByRoomIDRequest {
+  int32 room_id = 1;
+}
+
+message FindAllRoomInvitesByRoomIDResponse {
+  repeated RoomInvite invites = 1;
+}
+
 message FindAllRoomInvitesByInviteToRequest {
   string invite_to = 1;
 }
@@ -74,11 +82,21 @@ message DeleteRoomInviteResponse {
   string message = 1;
 }
 
+message AcceptedRoomInviteRequest {
+  int32 id = 1;
+}
+
+message AcceptedRoomInviteResponse {
+  string message = 1;
+}
+
 service RoomInviteService {
   rpc CreateRoomInvite(CreateRoomInviteRequest) returns (CreateRoomInviteResponse);
   rpc FindRoomInviteByID(FindRoomInviteByIDRequest) returns (FindRoomInviteByIDResponse);
   rpc FindAllRoomInvitesBySender(FindAllRoomInvitesBySenderRequest) returns (FindAllRoomInvitesBySenderResponse);
+  rpc FindAllRoomInvitesByRoomID(FindAllRoomInvitesByRoomIDRequest) returns (FindAllRoomInvitesByRoomIDResponse);
   rpc FindAllRoomInvitesByInviteTo(FindAllRoomInvitesByInviteToRequest) returns (FindAllRoomInvitesByInviteToResponse);
   rpc PatchRoomInvite(PatchRoomInviteRequest) returns (PatchRoomInviteResponse);
   rpc DeleteRoomInvite(DeleteRoomInviteRequest) returns (DeleteRoomInviteResponse);
+  rpc AcceptedRoomInvite(AcceptedRoomInviteRequest) returns (AcceptedRoomInviteResponse);
 }

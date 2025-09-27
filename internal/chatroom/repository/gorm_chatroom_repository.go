@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/MingPV/ChatService/internal/entities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,6 +29,7 @@ type chatroomDoc struct {
 	ID 			int    		`bson:"_id,omitempty"`
 	RoomName	string		`bson:"room_name"`
 	IsGroup		bool 		`bson:"is_group"`
+	Owner 		uuid.UUID  `bson:"owner" json:"owner"`
 	CreatedAt 	time.Time 	`bson:"created_at"`
     UpdatedAt 	time.Time 	`bson:"updated_at"`
 }
@@ -79,6 +82,7 @@ func (r *MongoChatroomRepository)	Save(chatroom *entities.Chatroom) error {
 		ID: nextID,
 		RoomName: chatroom.RoomName,
 		IsGroup: chatroom.IsGroup,
+		Owner: chatroom.Owner,
 		CreatedAt: chatroom.CreatedAt,
 		UpdatedAt: chatroom.UpdatedAt,
 	})
@@ -97,6 +101,7 @@ func (r *MongoChatroomRepository)	Patch(id int, chatroom *entities.Chatroom) err
 
 	update := bson.M{}
 	update["room_name"] = chatroom.RoomName
+	update["owner"] = chatroom.Owner
 	update["is_group"] = chatroom.IsGroup
 
 	_, err := r.coll.UpdateByID(ctx, id, bson.M{"$set": update})
@@ -119,6 +124,7 @@ func (r *MongoChatroomRepository)	FindByID(id int) (*entities.Chatroom, error) {
 		ID:    uint(ch.ID),
 		RoomName: ch.RoomName,
 		IsGroup: ch.IsGroup,
+		Owner: ch.Owner,
 		CreatedAt: ch.CreatedAt,
 		UpdatedAt: ch.UpdatedAt,
 	}, nil
