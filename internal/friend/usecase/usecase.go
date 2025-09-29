@@ -83,16 +83,18 @@ func (s *FriendService) FindFriendByID(id int) (*entities.Friend, error) {
 	return friend, nil
 }
 
-func (s *FriendService) AcceptFriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
+func (s *FriendService) AcceptFriend(id int) (*entities.Friend, error) {
 	//add friend
-	friend, err := s.friendRepo.Update(userId, friendId)
+	friend, err := s.friendRepo.Update(id)
 	if err != nil {
 		return nil, err
 	}
 
+	ch, err := s.friendRepo.FindByID(id)
+
 	//create chatroom between the two users
 	chatroom := &entities.Chatroom{
-		RoomName: fmt.Sprintf("room_%s_%s", userId.String(), friendId.String()),
+		RoomName: fmt.Sprintf("room_%s_%s", ch.UserID, ch.FriendID),
 		IsGroup: false,
 	}
 	
@@ -100,7 +102,7 @@ func (s *FriendService) AcceptFriend(userId uuid.UUID, friendId uuid.UUID) (*ent
 		return nil, err
 	}
 
-	userIDs := []uuid.UUID{userId, friendId}
+	userIDs := []uuid.UUID{ch.UserID, ch.FriendID}
 	if err := s.roommemberRepo.Save(chatroom.ID, userIDs); err != nil {
 		return nil, err
 	}

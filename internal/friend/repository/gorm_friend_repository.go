@@ -280,13 +280,12 @@ func (r *MongoFriendRepository) Delete(id uint) error {
     return err
 }
 
-func (r *MongoFriendRepository) Update(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
+func (r *MongoFriendRepository) Update(id int) (*entities.Friend, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	filter := bson.M{
-		"user_id":   friendId,
-		"friend_id": userId,
+		"_id": id,
 	}
 
 	update := bson.M{

@@ -73,8 +73,7 @@ message DeleteFriendResponse {
 }
 
 message AcceptFriendRequest {
-    string user_id = 1;
-    string friend_id = 2;
+    int32 id = 1;
 }
 
 message AcceptFriendResponse {

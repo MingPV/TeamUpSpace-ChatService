@@ -137,16 +137,7 @@ func (h *GrpcFriendHandler) IsMyFriend(ctx context.Context, req *friendpb.IsMyFr
 }
 
 func (h *GrpcFriendHandler) AcceptFriend(ctx context.Context, req *friendpb.AcceptFriendRequest) (*friendpb.AcceptFriendResponse, error){
-	userUUID, err := uuid.Parse(req.UserId)
-	if err != nil {
-		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
-	}
-	friendUUID, err := uuid.Parse(req.FriendId)
-	if err != nil {
-		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
-	}
-
-	friend, err := h.friendUseCase.AcceptFriend(userUUID, friendUUID)
+	friend, err := h.friendUseCase.AcceptFriend(int(req.Id))
 	if err != nil {
 		return nil, err
 	}

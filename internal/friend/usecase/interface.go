@@ -14,5 +14,5 @@ type FriendUseCase interface {
 	FindFriendByID(id int) (*entities.Friend, error)
 	IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error)
 	DeleteFriend(id uint) error
-	AcceptFriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error)
+	AcceptFriend(id int) (*entities.Friend, error)
 }
