@@ -69,6 +69,9 @@ func (r *MongoRoomMemberRepository) FindAllByRoomID(roomId uint) ([]*entities.Ro
 	defer cancel()
 
 	cur, err := r.coll.Find(ctx, bson.M{"room_id": roomId})
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return []*entities.RoomMember{}, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -118,6 +121,9 @@ func (r *MongoRoomMemberRepository) FindAllByUserID(userId uuid.UUID) ([]*entiti
 
 	// ต้องใช้ Aggregate แทน Find
 	cur, err := r.coll.Aggregate(ctx, pipeline)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return []*entities.RoomMember{}, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +154,7 @@ func (r *MongoRoomMemberRepository) FindAllByRoomIDAndUserID(roomId uint, userId
 	var d roomMemberDoc
 	err := r.coll.FindOne(ctx, bson.M{"room_id": roomId, "user_id": userId}).Decode(&d)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
+		return &entities.RoomMember{}, err
 	}
 	if err != nil {
 		return nil, err

@@ -101,6 +101,9 @@ func (r *MongoMessageRepository) FindAllByRoomID(roomId int) ([]*entities.Messag
 
 	filter := bson.M{"room_id": roomId}
 	cur, err := r.coll.Find(ctx, filter)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return []*entities.Message{}, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +153,8 @@ func (r *MongoMessageRepository) FindByRoomId(roomId int) (*entities.Message, er
 
 	err := r.coll.FindOne(ctx, filter, opts).Decode(&message)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil // no messages found
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return &entities.Message{}, err
 		}
 		return nil, err
 	}

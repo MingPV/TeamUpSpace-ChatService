@@ -100,7 +100,11 @@ func (r *MongoFriendRepository)	FindAll() ([]*entities.Friend, error){
 	defer cancel()
 
 	cur, err := r.coll.Find(ctx, bson.D{})
+	
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return []*entities.Friend{}, err
+		}
 		return nil, err
 	}
 	defer cur.Close(ctx)
@@ -135,6 +139,9 @@ func (r *MongoFriendRepository)	FindAllByUserId(userId uuid.UUID) ([]*entities.F
     },}
 	cur, err := r.coll.Find(ctx, filter)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return []*entities.Friend{}, err
+		}
 		return nil, err
 	}
 	defer cur.Close(ctx)
@@ -173,6 +180,9 @@ func (r *MongoFriendRepository)	FindAllByIsFriend(userId uuid.UUID) ([]*entities
 	}
 	cur, err := r.coll.Find(ctx, filter)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return []*entities.Friend{}, err
+		}
 		return nil, err
 	}
 	defer cur.Close(ctx)
@@ -247,6 +257,9 @@ func (r *MongoFriendRepository) FindAllFriendRequests(userId uuid.UUID) ([]*enti
 	filter := bson.M{"status": "pending", "friend_id" : userId}
 	cur, err := r.coll.Find(ctx, filter)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return []*entities.Friend{}, err
+		}
 		return nil, err
 	}
 	defer cur.Close(ctx)

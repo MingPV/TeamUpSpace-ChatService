@@ -90,6 +90,9 @@ func (r *MongoRoomInviteRepository) FindAllBySender(sender uuid.UUID) ([]*entiti
 	defer cancel()
 
 	cur, err := r.coll.Find(ctx, bson.M{"sender": sender})
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return []*entities.RoomInvite{}, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +114,9 @@ func (r *MongoRoomInviteRepository) FindAllByRoomId(roomId int) ([]*entities.Roo
 	defer cancel()
 
 	cur, err := r.coll.Find(ctx, bson.M{"room_id": roomId})
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return []*entities.RoomInvite{}, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +139,9 @@ func (r *MongoRoomInviteRepository) FindAllByInviteTo(inviteTo uuid.UUID) ([]*en
 	defer cancel()
 
 	cur, err := r.coll.Find(ctx, bson.M{"invite_to": inviteTo})
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return []*entities.RoomInvite{}, err
+	}
 	if err != nil {
 		return nil, err
 	}
