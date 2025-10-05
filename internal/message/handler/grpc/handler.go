@@ -114,6 +114,14 @@ func (h *GrpcMessageHandler) FindAllMessageByRoomID(ctx context.Context, req *me
 
 }
 
+func (h *GrpcMessageHandler) FindLatestMessageByRoomId(ctx context.Context, req *messagepb.FindLatestMessageByRoomIdRequest) (*messagepb.FIndLastestMessageByRoomIdResponse, error) {
+    message, err := h.messageUseCase.FindLatestMessageByRoomId(int(req.RoomId))
+    if err != nil {
+        return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+    }
+    return &messagepb.FIndLastestMessageByRoomIdResponse{Message: toProtoMessage(message)}, nil
+}
+
 func toProtoMessage(m *entities.Message) *messagepb.Message {
     return &messagepb.Message{
         Id: int32(m.ID),

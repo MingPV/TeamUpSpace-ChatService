@@ -74,3 +74,11 @@ func (s *MessageService) DeleteAllMessagesByRoomID(roomId int) error {
 	}
 	return nil
 }
+
+func (s *MessageService) FindLatestMessageByRoomId(roomId int) (*entities.Message, error) {
+	message, err := s.repo.FindByRoomId(roomId); 
+	if err != nil {
+		return nil, err
+	}
+	return message, nil
+}

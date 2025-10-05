@@ -60,9 +60,18 @@ message FindAllMessageByRoomIDResponse {
   repeated Message message = 1;
 }
 
+message FindLatestMessageByRoomIdRequest {
+  int32 room_id = 1;
+}
+
+message FIndLastestMessageByRoomIdResponse {
+  Message message = 1;
+}
+
 service MessageService {
   rpc Chat(stream ClientEvent) returns (stream ServerEvent);
   rpc FindAllMessageByRoomID(FindAllMessageByRoomIDRequest) returns (FindAllMessageByRoomIDResponse);
+  rpc FindLatestMessageByRoomId(FindLatestMessageByRoomIdRequest) returns (FIndLastestMessageByRoomIdResponse);
 }
 
 

@@ -138,3 +138,24 @@ func (r *MongoMessageRepository) DeleteAllMessagesByRoomID(roomId int) error {
 	_, err := r.coll.DeleteMany(ctx, filter)
 	return err
 }
+
+func (r *MongoMessageRepository) FindByRoomId(roomId int) (*entities.Message, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"room_id": roomId}
+	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
+
+	var message entities.Message
+
+	err := r.coll.FindOne(ctx, filter, opts).Decode(&message)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // no messages found
+		}
+		return nil, err
+	}
+
+	return &message, nil
+
+}
