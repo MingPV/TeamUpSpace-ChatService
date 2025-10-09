@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,46 +25,113 @@ func NewGrpcMessageHandler(uc usecase.MessageUseCase) *GrpcMessageHandler {
     return &GrpcMessageHandler{messageUseCase: uc}
 }
 
+// func (h *GrpcMessageHandler) Chat(stream messagepb.MessageService_ChatServer) error {
+//     // Receive initial JoinRoom to know which room to subscribe
+//     var (
+//         roomID int
+//         recvErr error
+//     )
+
+//     // Wait for a JoinRoom event first
+//     first, err := stream.Recv()
+//     if err != nil {
+//         if err == io.EOF {
+//             return nil
+//         }
+//         return err
+//     }
+//     if join := first.GetJoin(); join != nil {
+//         roomID = int(join.GetRoomId())
+//     }
+//     if roomID == 0 {
+//         return stream.Send(&messagepb.ServerEvent{Payload: &messagepb.ServerEvent_Error{Error: &messagepb.ErrorEvent{Message: "room not specified"}}})
+//     }
+
+//     // Subscribe to the room and forward new messages to the client
+//     msgCh, cleanup := h.messageUseCase.SubscribeRoom(roomID)
+//     defer cleanup()
+
+//     // notify connected
+//     _ = stream.Send(&messagepb.ServerEvent{Payload: &messagepb.ServerEvent_Ack{Ack: &messagepb.StreamAck{Message: "joined"}}})
+
+//     // Reader goroutine: consume incoming send events and persist
+//     done := make(chan struct{})
+//     go func() {
+//         defer close(done)
+//         for {
+//             in, e := stream.Recv()
+//             if e != nil {
+//                 recvErr = e
+//                 return
+//             }
+//             if send := in.GetSend(); send != nil {
+//                 senderUUID, _ := uuid.Parse(send.GetSenderId())
+//                 now := time.Now().UTC()
+//                 m := &entities.Message{
+//                     RoomId:    uint(send.GetRoomId()),
+//                     Message:   send.GetText(),
+//                     Sender:    senderUUID,
+//                     CreatedAt: now,
+//                     UpdatedAt: now,
+//                 }
+//                 _ = h.messageUseCase.CreateMessage(m)
+//             }
+//         }
+//     }()
+
+//     // Writer loop: push new messages to client
+//     for {
+//         select {
+//         case m, ok := <-msgCh:
+//             if !ok {
+//                 return nil
+//             }
+//             _ = stream.Send(&messagepb.ServerEvent{Payload: &messagepb.ServerEvent_Delivered{Delivered: &messagepb.MessageDelivered{
+//                 Id:             uint32(m.ID),
+//                 RoomId:         uint32(m.RoomId),
+//                 Text:           m.Message,
+//                 SenderId:       m.Sender.String(),
+//                 CreatedAtUnix:  m.CreatedAt.Unix(),
+//             }}})
+//         case <-done:
+//             return recvErr
+//         }
+//     }
+// }
+
 func (h *GrpcMessageHandler) Chat(stream messagepb.MessageService_ChatServer) error {
-    // Receive initial JoinRoom to know which room to subscribe
-    var (
-        roomID int
-        recvErr error
-    )
-
-    // Wait for a JoinRoom event first
-    first, err := stream.Recv()
-    if err != nil {
-        if err == io.EOF {
-            return nil
-        }
-        return err
-    }
-    if join := first.GetJoin(); join != nil {
-        roomID = int(join.GetRoomId())
-    }
-    if roomID == 0 {
-        return stream.Send(&messagepb.ServerEvent{Payload: &messagepb.ServerEvent_Error{Error: &messagepb.ErrorEvent{Message: "room not specified"}}})
+    type roomSub struct {
+        ch      <-chan *entities.Message
+        cleanup func()
     }
 
-    // Subscribe to the room and forward new messages to the client
-    msgCh, cleanup := h.messageUseCase.SubscribeRoom(roomID)
-    defer cleanup()
-
-    // notify connected
-    _ = stream.Send(&messagepb.ServerEvent{Payload: &messagepb.ServerEvent_Ack{Ack: &messagepb.StreamAck{Message: "joined"}}})
-
-    // Reader goroutine: consume incoming send events and persist
+    rooms := make(map[int]*roomSub)
+    recvErr := error(nil)
     done := make(chan struct{})
+
+    // Reader goroutine
     go func() {
         defer close(done)
         for {
-            in, e := stream.Recv()
-            if e != nil {
-                recvErr = e
+            in, err := stream.Recv()
+            if err != nil {
+                recvErr = err
                 return
             }
-            if send := in.GetSend(); send != nil {
+
+            switch payload := in.Payload.(type) {
+            case *messagepb.ClientEvent_Join:
+                rid := int(payload.Join.RoomId)
+                if rooms[rid] == nil {
+                    ch, cleanup := h.messageUseCase.SubscribeRoom(rid)
+                    rooms[rid] = &roomSub{ch: ch, cleanup: cleanup}
+                    fmt.Printf("gRPC: user joined room %d", rid)
+                }
+
+            
+
+            case *messagepb.ClientEvent_Send:
+                send := payload.Send
                 senderUUID, _ := uuid.Parse(send.GetSenderId())
                 now := time.Now().UTC()
                 m := &entities.Message{
@@ -74,30 +141,52 @@ func (h *GrpcMessageHandler) Chat(stream messagepb.MessageService_ChatServer) er
                     CreatedAt: now,
                     UpdatedAt: now,
                 }
+                fmt.Println(m)
                 _ = h.messageUseCase.CreateMessage(m)
+                
+                
             }
         }
     }()
 
-    // Writer loop: push new messages to client
+    // Writer loop: multiplex all joined room channels
     for {
         select {
-        case m, ok := <-msgCh:
-            if !ok {
-                return nil
-            }
-            _ = stream.Send(&messagepb.ServerEvent{Payload: &messagepb.ServerEvent_Delivered{Delivered: &messagepb.MessageDelivered{
-                Id:             uint32(m.ID),
-                RoomId:         uint32(m.RoomId),
-                Text:           m.Message,
-                SenderId:       m.Sender.String(),
-                CreatedAtUnix:  m.CreatedAt.Unix(),
-            }}})
         case <-done:
+            // cleanup all
+            for _, sub := range rooms {
+                sub.cleanup()
+            }
             return recvErr
+        default:
+            for rid, sub := range rooms {
+                select {
+                case m, ok := <-sub.ch:
+                    if !ok {
+                        sub.cleanup()
+                        delete(rooms, rid)
+                        continue
+                    }
+                    _ = stream.Send(&messagepb.ServerEvent{
+                        Payload: &messagepb.ServerEvent_Delivered{
+                            Delivered: &messagepb.MessageDelivered{
+                                Id:            uint32(m.ID),
+                                RoomId:        uint32(m.RoomId),
+                                Text:          m.Message,
+                                SenderId:      m.Sender.String(),
+                                CreatedAtUnix: m.CreatedAt.Unix(),
+                            },
+                        },
+                    })
+                default:
+                    // no message for this room, continue
+                }
+            }
+            time.Sleep(50 * time.Millisecond)
         }
     }
 }
+
 
 func (h *GrpcMessageHandler) FindAllMessageByRoomID(ctx context.Context, req *messagepb.FindAllMessageByRoomIDRequest) (*messagepb.FindAllMessageByRoomIDResponse, error) {
     messages, err := h.messageUseCase.FindAllByRoomID(int(req.RoomId))
