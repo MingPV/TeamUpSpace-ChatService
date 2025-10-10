@@ -28,30 +28,32 @@ func NewMongoLastvisitRepository(db *mongo.Database) LastvisitRepository {
 type lastvisitDoc struct {
 	UserID uuid.UUID `bson:"user_id"`
 	Lastvisit time.Time `bson:"lastvisit"`
+	RoomID int `bson:"room_id"`
 }
 
 
-func (r *MongoLastvisitRepository) Save(lastvisit *entities.Lastvisit) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+// func (r *MongoLastvisitRepository) Save(lastvisit *entities.Lastvisit) error {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// 	defer cancel()
 
-	_, err := r.coll.InsertOne(ctx, lastvisitDoc{
-        UserID:    lastvisit.UserID,
-        Lastvisit: lastvisit.Lastvisit,
-    })
-    if err != nil {
-        return err
-    }
+// 	_, err := r.coll.InsertOne(ctx, lastvisitDoc{
+//         UserID:    lastvisit.UserID,
+//         Lastvisit: lastvisit.Lastvisit,
+// 		RoomID: lastvisit.RoomID,
+//     })
+//     if err != nil {
+//         return err
+//     }
 
-	return nil
-}
+// 	return nil
+// }
 
-func (r *MongoLastvisitRepository) FindByUserId(userId uuid.UUID) (*entities.Lastvisit, error) {
+func (r *MongoLastvisitRepository) FindByUserId(userId uuid.UUID, roomId int) (*entities.Lastvisit, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
     var doc lastvisitDoc
-    err := r.coll.FindOne(ctx, bson.M{"user_id": userId}).Decode(&doc)
+    err := r.coll.FindOne(ctx, bson.M{"user_id": userId, "room_id" : roomId}).Decode(&doc)
     if err != nil {
        if errors.Is(err, mongo.ErrNoDocuments) {
             return &entities.Lastvisit{}, nil // ไม่มี record
@@ -62,10 +64,11 @@ func (r *MongoLastvisitRepository) FindByUserId(userId uuid.UUID) (*entities.Las
     return &entities.Lastvisit{
         UserID:    doc.UserID,
         Lastvisit: doc.Lastvisit,
+		RoomID: doc.RoomID,
     }, nil
 }
 
-func (r *MongoLastvisitRepository) Patch(userId uuid.UUID) (*entities.Lastvisit, error) {
+func (r *MongoLastvisitRepository) Patch(userId uuid.UUID, roomId int) (*entities.Lastvisit, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
@@ -76,7 +79,7 @@ func (r *MongoLastvisitRepository) Patch(userId uuid.UUID) (*entities.Lastvisit,
     var updatedDoc lastvisitDoc
     err := r.coll.FindOneAndUpdate(
         ctx,
-        bson.M{"user_id": userId},
+        bson.M{"user_id": userId, "room_id": roomId},
         bson.M{"$set": bson.M{"lastvisit": now}},
         opts,
     ).Decode(&updatedDoc)
@@ -87,5 +90,6 @@ func (r *MongoLastvisitRepository) Patch(userId uuid.UUID) (*entities.Lastvisit,
     return &entities.Lastvisit{
         UserID:    updatedDoc.UserID,
         Lastvisit: updatedDoc.Lastvisit,
+		RoomID: updatedDoc.RoomID,
     }, nil
 }

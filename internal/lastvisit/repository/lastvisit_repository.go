@@ -6,7 +6,7 @@ import (
 )
 
 type LastvisitRepository interface {
-	Save(lastvisit *entities.Lastvisit) error
-	FindByUserId(userId uuid.UUID) (*entities.Lastvisit, error)
-	Patch(userId uuid.UUID) (*entities.Lastvisit, error)
+	// Save(lastvisit *entities.Lastvisit) error
+	FindByUserId(userId uuid.UUID, roomId int) (*entities.Lastvisit, error)
+	Patch(userId uuid.UUID, roomId int) (*entities.Lastvisit, error)
 }

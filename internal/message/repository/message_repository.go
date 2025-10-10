@@ -11,6 +11,6 @@ type MessageRepository interface {
 
 	DeleteAllMessagesByRoomID(roomId int) error
 	FindByRoomId(roomId int) (*entities.Message, error)
-	FindAllMessagesUnread(userId uuid.UUID) ([]*entities.Message, error)
+	FindAllMessagesUnread(userId uuid.UUID, roomId int) ([]*entities.Message, error)
 
 }

@@ -15,14 +15,15 @@ func NewLastvisitService(repo repository.LastvisitRepository) LastVisitUseCase {
 }
 
 
-func (s *LastvisitService) CreateLastvisit(lastvisit *entities.Lastvisit) error {
-	if err := s.repo.Save(lastvisit); err != nil {
-		return err
-	}
-	return nil
-}
-func (s *LastvisitService) UpdateLastvisit(userId uuid.UUID) (*entities.Lastvisit, error) {
-    updatedLastvisit, err := s.repo.Patch(userId)
+// func (s *LastvisitService) CreateLastvisit(lastvisit *entities.Lastvisit) error {
+// 	if err := s.repo.Save(lastvisit); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func (s *LastvisitService) UpdateLastvisit(userId uuid.UUID, roomId int) (*entities.Lastvisit, error) {
+    updatedLastvisit, err := s.repo.Patch(userId, roomId)
     if err != nil {
         return nil, err
     }
@@ -31,8 +32,8 @@ func (s *LastvisitService) UpdateLastvisit(userId uuid.UUID) (*entities.Lastvisi
 }
 
 
-func (s *LastvisitService) FindByUserID(userId uuid.UUID) (*entities.Lastvisit, error){
-	lastvisit, err := s.repo.FindByUserId(userId)
+func (s *LastvisitService) FindByUserID(userId uuid.UUID, roomId int) (*entities.Lastvisit, error){
+	lastvisit, err := s.repo.FindByUserId(userId, roomId)
 	if err != nil {
 		return nil, err
 	}

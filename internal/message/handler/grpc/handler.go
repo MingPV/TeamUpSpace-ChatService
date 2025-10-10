@@ -125,7 +125,6 @@ func (h *GrpcMessageHandler) Chat(stream messagepb.MessageService_ChatServer) er
                 if rooms[rid] == nil {
                     ch, cleanup := h.messageUseCase.SubscribeRoom(rid)
                     rooms[rid] = &roomSub{ch: ch, cleanup: cleanup}
-                    fmt.Printf("gRPC: user joined room %d", rid)
                 }
 
             
@@ -141,7 +140,6 @@ func (h *GrpcMessageHandler) Chat(stream messagepb.MessageService_ChatServer) er
                     CreatedAt: now,
                     UpdatedAt: now,
                 }
-                fmt.Println(m)
                 _ = h.messageUseCase.CreateMessage(m)
                 
                 
@@ -216,7 +214,8 @@ func (h *GrpcMessageHandler) FindAllMessageUnread(ctx context.Context, req *mess
 	if err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
-    messages, err := h.messageUseCase.FindAllMessagesUnread(userUUID)
+    fmt.Println("req.RoomId", req.RoomId)
+    messages, err := h.messageUseCase.FindAllMessagesUnread(userUUID, int(req.RoomId))
     if err != nil {
         return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
     }

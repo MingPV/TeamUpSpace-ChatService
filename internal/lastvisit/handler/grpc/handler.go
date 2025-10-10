@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MingPV/ChatService/internal/entities"
 	"github.com/MingPV/ChatService/internal/lastvisit/usecase"
@@ -46,7 +47,7 @@ func (h *GrpcLastvisitHandler) FindByUserID(ctx context.Context, req *lastvisitp
 	if err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
-	lastvisit, err := h.lastvisitUseCase.FindByUserID(userUUID)
+	lastvisit, err := h.lastvisitUseCase.FindByUserID(userUUID, int(req.RoomId))
 	if err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
@@ -58,8 +59,9 @@ func (h *GrpcLastvisitHandler) UpdateLastvisit(ctx context.Context, req *lastvis
 	if err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
+	fmt.Println(req)
 	
-	updatedLastvisit, err := h.lastvisitUseCase.UpdateLastvisit(userUUID)
+	updatedLastvisit, err := h.lastvisitUseCase.UpdateLastvisit(userUUID, int(req.RoomId))
 	if err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
@@ -70,5 +72,6 @@ func toProtoLastvisit(lvs *entities.Lastvisit) *lastvisitpb.Lastvisit {
 	return &lastvisitpb.Lastvisit{
 		UserId: lvs.UserID.String(),
 		Lastvisit: timestamppb.New(lvs.Lastvisit),
+		RoomId: int32(lvs.RoomID),
 	}
 }

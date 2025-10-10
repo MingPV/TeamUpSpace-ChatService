@@ -9,6 +9,7 @@ option go_package = "proto/lastvisit";
 message Lastvisit {
     string user_id = 1;
     google.protobuf.Timestamp lastvisit = 2; 
+    int32 room_id = 3;
 }
 
 // message CreateLastvisitRequest {
@@ -21,6 +22,7 @@ message Lastvisit {
 
 message FindByUserIDRequest {
     string user_id = 1;
+    int32 room_id = 2;
 }
 
 message FindByUserIDResponse {
@@ -29,6 +31,7 @@ message FindByUserIDResponse {
 
 message UpdateLastvisitRequest {
     string user_id = 1;
+    int32 room_id = 2;
 }
 
 message UpdateLastvisitResponse {

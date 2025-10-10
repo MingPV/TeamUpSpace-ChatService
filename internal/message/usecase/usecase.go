@@ -84,8 +84,8 @@ func (s *MessageService) FindLatestMessageByRoomId(roomId int) (*entities.Messag
 	return message, nil
 }
 
-func (s *MessageService) FindAllMessagesUnread(userId uuid.UUID) ([]*entities.Message, error) {
-	messages, err := s.repo.FindAllMessagesUnread(userId)
+func (s *MessageService) FindAllMessagesUnread(userId uuid.UUID, roomId int) ([]*entities.Message, error) {
+	messages, err := s.repo.FindAllMessagesUnread(userId, roomId)
 	if err != nil {
 		return nil, err
 	}

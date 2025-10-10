@@ -6,7 +6,7 @@ import (
 )
 
 type LastVisitUseCase interface {
-	CreateLastvisit(lastvisit *entities.Lastvisit) error
-	UpdateLastvisit(userId uuid.UUID) (*entities.Lastvisit, error)
-	FindByUserID(userId uuid.UUID) (*entities.Lastvisit, error)
+	// CreateLastvisit(lastvisit *entities.Lastvisit) error
+	UpdateLastvisit(userId uuid.UUID, roomId int) (*entities.Lastvisit, error)
+	FindByUserID(userId uuid.UUID, roomId int) (*entities.Lastvisit, error)
 }

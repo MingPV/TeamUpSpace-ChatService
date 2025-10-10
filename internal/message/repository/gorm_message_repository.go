@@ -163,7 +163,8 @@ func (r *MongoMessageRepository) FindByRoomId(roomId int) (*entities.Message, er
 	return &message, nil
 }
 
-func (r *MongoMessageRepository) FindAllMessagesUnread(userId uuid.UUID) ([]*entities.Message, error) {
+func (r *MongoMessageRepository) FindAllMessagesUnread(userId uuid.UUID, roomId int) ([]*entities.Message, error) {
+	fmt.Println("roomId", roomId)
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
@@ -172,10 +173,10 @@ func (r *MongoMessageRepository) FindAllMessagesUnread(userId uuid.UUID) ([]*ent
     var lastVisitDoc struct {
         UserID    string    `bson:"user_id"`
         LastVisit time.Time `bson:"lastvisit"`
+		RoomID	int	`bson:"room_id"`
     }
-	fmt.Println(lastVisitCollection)
 
-    err := lastVisitCollection.FindOne(ctx, bson.M{"user_id": userId}).Decode(&lastVisitDoc)
+    err := lastVisitCollection.FindOne(ctx, bson.M{"user_id": userId, "room_id": roomId}).Decode(&lastVisitDoc)
     if err != nil {
         if err == mongo.ErrNoDocuments {
             // User never visited, return all messages
@@ -184,14 +185,17 @@ func (r *MongoMessageRepository) FindAllMessagesUnread(userId uuid.UUID) ([]*ent
             return nil, err
         }
     }
-		fmt.Println(lastVisitDoc.LastVisit, lastVisitDoc.UserID)
 
 
     // 2️⃣ Query messages created after lastVisit
     messagesCollection := r.db.Collection("messages")
+	fmt.Println(lastVisitDoc)
     filter := bson.M{
-        "created_at": bson.M{"$gt": lastVisitDoc.LastVisit},
-    }
+	"room_id": roomId,
+	"created_at": bson.M{
+		"$gt": lastVisitDoc.LastVisit,
+	},
+}
 
     cursor, err := messagesCollection.Find(ctx, filter)
     if err != nil {
