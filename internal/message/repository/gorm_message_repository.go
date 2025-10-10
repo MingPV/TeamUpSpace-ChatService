@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -160,5 +161,56 @@ func (r *MongoMessageRepository) FindByRoomId(roomId int) (*entities.Message, er
 	}
 
 	return &message, nil
+}
 
+func (r *MongoMessageRepository) FindAllMessagesUnread(userId uuid.UUID) ([]*entities.Message, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    // 1️⃣ Get the last visit timestamp from lastvisit collection
+    lastVisitCollection := r.db.Collection("lastvisits")
+    var lastVisitDoc struct {
+        UserID    string    `bson:"user_id"`
+        LastVisit time.Time `bson:"lastvisit"`
+    }
+	fmt.Println(lastVisitCollection)
+
+    err := lastVisitCollection.FindOne(ctx, bson.M{"user_id": userId}).Decode(&lastVisitDoc)
+    if err != nil {
+        if err == mongo.ErrNoDocuments {
+            // User never visited, return all messages
+            lastVisitDoc.LastVisit = time.Time{} // zero time
+        } else {
+            return nil, err
+        }
+    }
+		fmt.Println(lastVisitDoc.LastVisit, lastVisitDoc.UserID)
+
+
+    // 2️⃣ Query messages created after lastVisit
+    messagesCollection := r.db.Collection("messages")
+    filter := bson.M{
+        "created_at": bson.M{"$gt": lastVisitDoc.LastVisit},
+    }
+
+    cursor, err := messagesCollection.Find(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+
+    var messages []*entities.Message
+    for cursor.Next(ctx) {
+        var m entities.Message
+        if err := cursor.Decode(&m); err != nil {
+            return nil, err
+        }
+        messages = append(messages, &m)
+    }
+
+    if err := cursor.Err(); err != nil {
+        return nil, err
+    }
+
+    return messages, nil
 }

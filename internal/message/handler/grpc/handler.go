@@ -203,12 +203,31 @@ func (h *GrpcMessageHandler) FindAllMessageByRoomID(ctx context.Context, req *me
 
 }
 
-func (h *GrpcMessageHandler) FindLatestMessageByRoomId(ctx context.Context, req *messagepb.FindLatestMessageByRoomIdRequest) (*messagepb.FIndLastestMessageByRoomIdResponse, error) {
+func (h *GrpcMessageHandler) FindLatestMessageByRoomId(ctx context.Context, req *messagepb.FindLatestMessageByRoomIdRequest) (*messagepb.FindLastestMessageByRoomIdResponse, error) {
     message, err := h.messageUseCase.FindLatestMessageByRoomId(int(req.RoomId))
     if err != nil {
         return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
     }
-    return &messagepb.FIndLastestMessageByRoomIdResponse{Message: toProtoMessage(message)}, nil
+    return &messagepb.FindLastestMessageByRoomIdResponse{Message: toProtoMessage(message)}, nil
+}
+
+func (h *GrpcMessageHandler) FindAllMessageUnread(ctx context.Context, req *messagepb.FindAllMessageUnreadRequest) (*messagepb.FindAllMessageUnreadResponse, error){
+    userUUID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+	}
+    messages, err := h.messageUseCase.FindAllMessagesUnread(userUUID)
+    if err != nil {
+        return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
+    }
+
+    var protoMessages []*messagepb.Message
+    for _, m := range messages {
+        protoMessages = append(protoMessages, toProtoMessage(m))
+    }
+
+    return &messagepb.FindAllMessageUnreadResponse{Messages: protoMessages}, nil
+
 }
 
 func toProtoMessage(m *entities.Message) *messagepb.Message {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/MingPV/ChatService/internal/entities"
 	"github.com/MingPV/ChatService/internal/message/repository"
+	"github.com/google/uuid"
 )
 
 type MessageService struct {
@@ -81,4 +82,12 @@ func (s *MessageService) FindLatestMessageByRoomId(roomId int) (*entities.Messag
 		return nil, err
 	}
 	return message, nil
+}
+
+func (s *MessageService) FindAllMessagesUnread(userId uuid.UUID) ([]*entities.Message, error) {
+	messages, err := s.repo.FindAllMessagesUnread(userId)
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
 }

@@ -15,6 +15,11 @@ import (
 	friendUseCase "github.com/MingPV/ChatService/internal/friend/usecase"
 	friendpb "github.com/MingPV/ChatService/proto/friend"
 
+	GrpcLastvisitHandler "github.com/MingPV/ChatService/internal/lastvisit/handler/grpc"
+	lastvisitRepository "github.com/MingPV/ChatService/internal/lastvisit/repository"
+	lastvisitUseCase "github.com/MingPV/ChatService/internal/lastvisit/usecase"
+	lastvisitpb "github.com/MingPV/ChatService/proto/lastvisit"
+
 	GrpcMessageHandler "github.com/MingPV/ChatService/internal/message/handler/grpc"
 	messageRepository "github.com/MingPV/ChatService/internal/message/repository"
 	messageUseCase "github.com/MingPV/ChatService/internal/message/usecase"
@@ -76,6 +81,10 @@ func SetupGrpcServer(db *mongo.Database, cfg *config.Config) (*grpc.Server, erro
 	roominvitepb.RegisterRoomInviteServiceServer(s, roominviteHandler)
 	
 	
+	lastvisitRepo := lastvisitRepository.NewMongoLastvisitRepository(db)
+	lastvisitService := lastvisitUseCase.NewLastvisitService(lastvisitRepo)
+	lastvisitHandler := GrpcLastvisitHandler.NewGrpcLastvisitHandler(lastvisitService)
+	lastvisitpb.RegisterLastvisitServiceServer(s, lastvisitHandler)
 	// Message streaming service
 	msgRepo := messageRepository.NewMongoMessageRepository(db)
 	msgUseCase := messageUseCase.NewMessageService(msgRepo)
