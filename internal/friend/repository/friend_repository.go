@@ -11,7 +11,7 @@ type FriendRepository interface {
 	FindAllByUserId(userId uuid.UUID) ([]*entities.Friend, error)
 	FindAllByIsFriend(userId uuid.UUID) ([]*entities.Friend, error)
 	FindAllFriendRequests(userId uuid.UUID) ([]*entities.Friend, error)
-	IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error)
+	IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error)
 	FindByID(id int) (*entities.Friend, error)
 	Delete(id uint) error 
 	Update(id int) (*entities.Friend, error)

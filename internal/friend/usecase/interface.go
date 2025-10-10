@@ -12,7 +12,7 @@ type FriendUseCase interface {
 	FindAllFriendsByIsFriend(userId uuid.UUID) ([]*entities.Friend, error)
 	FindAllFriendsRequests(userId uuid.UUID) ([]*entities.Friend, error)
 	FindFriendByID(id int) (*entities.Friend, error)
-	IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error)
+	IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error)
 	DeleteFriend(id uint) error
 	AcceptFriend(id int) (*entities.Friend, error)
 }

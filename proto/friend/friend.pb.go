@@ -645,7 +645,7 @@ type IsMyFriendResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Status string `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Friend *Friend `protobuf:"bytes,1,opt,name=friend,proto3" json:"friend,omitempty"`
 }
 
 func (x *IsMyFriendResponse) Reset() {
@@ -680,11 +680,11 @@ func (*IsMyFriendResponse) Descriptor() ([]byte, []int) {
 	return file_proto_friend_friend_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *IsMyFriendResponse) GetStatus() string {
+func (x *IsMyFriendResponse) GetFriend() *Friend {
 	if x != nil {
-		return x.Status
+		return x.Friend
 	}
-	return ""
+	return nil
 }
 
 type DeleteFriendRequest struct {
@@ -942,10 +942,11 @@ var file_proto_friend_friend_proto_rawDesc = []byte{
 	0x0a, 0x07, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x72, 0x69, 0x65, 0x6e,
 	0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x72, 0x69, 0x65,
-	0x6e, 0x64, 0x49, 0x64, 0x22, 0x2c, 0x0a, 0x12, 0x49, 0x73, 0x4d, 0x79, 0x46, 0x72, 0x69, 0x65,
-	0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74,
-	0x75, 0x73, 0x22, 0x25, 0x0a, 0x13, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x72, 0x69, 0x65,
+	0x6e, 0x64, 0x49, 0x64, 0x22, 0x3c, 0x0a, 0x12, 0x49, 0x73, 0x4d, 0x79, 0x46, 0x72, 0x69, 0x65,
+	0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x26, 0x0a, 0x06, 0x66, 0x72,
+	0x69, 0x65, 0x6e, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x66, 0x72, 0x69,
+	0x65, 0x6e, 0x64, 0x2e, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x52, 0x06, 0x66, 0x72, 0x69, 0x65,
+	0x6e, 0x64, 0x22, 0x25, 0x0a, 0x13, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x72, 0x69, 0x65,
 	0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x22, 0x30, 0x0a, 0x14, 0x44, 0x65, 0x6c,
 	0x65, 0x74, 0x65, 0x46, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
@@ -1047,28 +1048,29 @@ var file_proto_friend_friend_proto_depIdxs = []int32{
 	0,  // 4: friend.FindAllFriendsByUserIDResponse.friends:type_name -> friend.Friend
 	0,  // 5: friend.FindAllFriendsByIsFriendResponse.friends:type_name -> friend.Friend
 	0,  // 6: friend.FindAllFriendRequestsResponse.friends:type_name -> friend.Friend
-	0,  // 7: friend.AcceptFriendResponse.friend:type_name -> friend.Friend
-	1,  // 8: friend.FriendService.CreateFriend:input_type -> friend.CreateFriendRequest
-	3,  // 9: friend.FriendService.FindAllFriends:input_type -> friend.FindAllFriendsRequest
-	9,  // 10: friend.FriendService.FindAllFriendRequests:input_type -> friend.FindAllFriendRequestsRequest
-	5,  // 11: friend.FriendService.FindAllFriendsByUserID:input_type -> friend.FindAllFriendsByUserIDRequest
-	7,  // 12: friend.FriendService.FindAllFriendsByIsFriend:input_type -> friend.FindAllFriendsByIsFriendRequest
-	13, // 13: friend.FriendService.DeleteFriend:input_type -> friend.DeleteFriendRequest
-	11, // 14: friend.FriendService.IsMyFriend:input_type -> friend.IsMyFriendRequest
-	15, // 15: friend.FriendService.AcceptFriend:input_type -> friend.AcceptFriendRequest
-	2,  // 16: friend.FriendService.CreateFriend:output_type -> friend.CreateFriendResponse
-	4,  // 17: friend.FriendService.FindAllFriends:output_type -> friend.FindAllFriendsResponse
-	10, // 18: friend.FriendService.FindAllFriendRequests:output_type -> friend.FindAllFriendRequestsResponse
-	6,  // 19: friend.FriendService.FindAllFriendsByUserID:output_type -> friend.FindAllFriendsByUserIDResponse
-	8,  // 20: friend.FriendService.FindAllFriendsByIsFriend:output_type -> friend.FindAllFriendsByIsFriendResponse
-	14, // 21: friend.FriendService.DeleteFriend:output_type -> friend.DeleteFriendResponse
-	12, // 22: friend.FriendService.IsMyFriend:output_type -> friend.IsMyFriendResponse
-	16, // 23: friend.FriendService.AcceptFriend:output_type -> friend.AcceptFriendResponse
-	16, // [16:24] is the sub-list for method output_type
-	8,  // [8:16] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	0,  // 7: friend.IsMyFriendResponse.friend:type_name -> friend.Friend
+	0,  // 8: friend.AcceptFriendResponse.friend:type_name -> friend.Friend
+	1,  // 9: friend.FriendService.CreateFriend:input_type -> friend.CreateFriendRequest
+	3,  // 10: friend.FriendService.FindAllFriends:input_type -> friend.FindAllFriendsRequest
+	9,  // 11: friend.FriendService.FindAllFriendRequests:input_type -> friend.FindAllFriendRequestsRequest
+	5,  // 12: friend.FriendService.FindAllFriendsByUserID:input_type -> friend.FindAllFriendsByUserIDRequest
+	7,  // 13: friend.FriendService.FindAllFriendsByIsFriend:input_type -> friend.FindAllFriendsByIsFriendRequest
+	13, // 14: friend.FriendService.DeleteFriend:input_type -> friend.DeleteFriendRequest
+	11, // 15: friend.FriendService.IsMyFriend:input_type -> friend.IsMyFriendRequest
+	15, // 16: friend.FriendService.AcceptFriend:input_type -> friend.AcceptFriendRequest
+	2,  // 17: friend.FriendService.CreateFriend:output_type -> friend.CreateFriendResponse
+	4,  // 18: friend.FriendService.FindAllFriends:output_type -> friend.FindAllFriendsResponse
+	10, // 19: friend.FriendService.FindAllFriendRequests:output_type -> friend.FindAllFriendRequestsResponse
+	6,  // 20: friend.FriendService.FindAllFriendsByUserID:output_type -> friend.FindAllFriendsByUserIDResponse
+	8,  // 21: friend.FriendService.FindAllFriendsByIsFriend:output_type -> friend.FindAllFriendsByIsFriendResponse
+	14, // 22: friend.FriendService.DeleteFriend:output_type -> friend.DeleteFriendResponse
+	12, // 23: friend.FriendService.IsMyFriend:output_type -> friend.IsMyFriendResponse
+	16, // 24: friend.FriendService.AcceptFriend:output_type -> friend.AcceptFriendResponse
+	17, // [17:25] is the sub-list for method output_type
+	9,  // [9:17] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_proto_friend_friend_proto_init() }

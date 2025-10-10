@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	"context"
@@ -208,9 +210,10 @@ func (r *MongoFriendRepository)	FindAllByIsFriend(userId uuid.UUID) ([]*entities
 	return results, nil
 }
 
-func (r *MongoFriendRepository) IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error) {
+func (r *MongoFriendRepository) IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	fmt.Println("gorm", userId, friendId)
 
 	filter := bson.M{
 		"$or": []bson.M{
@@ -227,27 +230,52 @@ func (r *MongoFriendRepository) IsMyfriend(userId uuid.UUID, friendId uuid.UUID)
 
 	var friend *entities.Friend
 	err := r.coll.FindOne(ctx, filter).Decode(&friend)
+	fmt.Println("result mongo", friend)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return "not friend", nil
+			// No friend record found → return empty struct with status "not friend"
+			return &entities.Friend{
+				Status: "not friend",
+			}, nil
 		}
-		return "", err // real error
+		// Real DB error
+		return nil, err
 	}
 
-	if friend.Status == "friend" {
-		return "friend", nil
-	}
-
-	if friend.Status == "pending" {
+	// ✅ Ensure friend has correct status meaning
+	switch friend.Status {
+	case "friend":
+		return friend, nil
+	case "meet":
+		return friend, nil
+	case "pending":
+		// Differentiate direction of request
 		if friend.FriendID == userId {
-			return "asked", nil
+			return &entities.Friend{
+				ID: friend.ID,
+				UserID: friend.FriendID,
+				FriendID: friend.UserID,
+				Status: "asked",
+				CreatedAt: friend.CreatedAt,
+				UpdatedAt: friend.UpdatedAt,
+			}, nil
+		} else if friend.UserID == userId {
+			return &entities.Friend{
+				ID: friend.ID,
+				UserID: friend.UserID,
+				FriendID: friend.FriendID,
+				Status: "pending",
+				CreatedAt: friend.CreatedAt,
+				UpdatedAt: friend.UpdatedAt,
+			}, nil
 		}
-		if friend.UserID == userId {
-			return "pending", nil
-		}
+	default:
+		friend.Status = "not friend"
 	}
 
-	return "not friend", nil //fallback
+	return &entities.Friend{
+				Status: "not friend",
+			}, nil
 }
 
 func (r *MongoFriendRepository) FindAllFriendRequests(userId uuid.UUID) ([]*entities.Friend, error) {

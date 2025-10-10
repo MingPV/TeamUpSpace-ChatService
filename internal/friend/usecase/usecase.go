@@ -25,6 +25,22 @@ func (s *FriendService)	CreateFriend(friend *entities.Friend) error {
 	if err := s.friendRepo.Save(friend); err != nil {
 		return err
 	}
+	fmt.Println("create at this")
+	//create chatroom between the two users
+	chatroom := &entities.Chatroom{
+		RoomName: fmt.Sprintf("room_%s_%s", friend.UserID, friend.FriendID),
+		IsGroup: false,
+	}
+	
+	if err := s.chatroomRepo.Save(chatroom); err != nil {
+		return nil
+	}
+
+	userIDs := []uuid.UUID{ friend.UserID, friend.FriendID}
+	if err := s.roommemberRepo.Save(chatroom.ID, userIDs); err != nil {
+		return nil
+	}
+
 	return nil
 }
 
@@ -59,12 +75,14 @@ func (s *FriendService)	FindAllFriendsRequests(userId uuid.UUID) ([]*entities.Fr
 	return orders, nil
 }
 
-func (s *FriendService) IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (string, error) {
-	status, err := s.friendRepo.IsMyfriend(userId, friendId)
+func (s *FriendService) IsMyfriend(userId uuid.UUID, friendId uuid.UUID) (*entities.Friend, error) {
+	friend, err := s.friendRepo.IsMyfriend(userId, friendId)
 	if err != nil {
-		return "", err
+		return &entities.Friend{
+				Status: "not friend",
+			}, err
 	}
-	return status, nil
+	return friend, nil
 }
 
 func (s *FriendService)	DeleteFriend(id uint) error {
@@ -90,22 +108,22 @@ func (s *FriendService) AcceptFriend(id int) (*entities.Friend, error) {
 		return nil, err
 	}
 
-	ch, err := s.friendRepo.FindByID(id)
+	// ch, err := s.friendRepo.FindByID(id)
 
-	//create chatroom between the two users
-	chatroom := &entities.Chatroom{
-		RoomName: fmt.Sprintf("room_%s_%s", ch.UserID, ch.FriendID),
-		IsGroup: false,
-	}
+	// //create chatroom between the two users
+	// chatroom := &entities.Chatroom{
+	// 	RoomName: fmt.Sprintf("room_%s_%s", ch.UserID, ch.FriendID),
+	// 	IsGroup: false,
+	// }
 	
-	if err := s.chatroomRepo.Save(chatroom); err != nil {
-		return nil, err
-	}
+	// if err := s.chatroomRepo.Save(chatroom); err != nil {
+	// 	return nil, err
+	// }
 
-	userIDs := []uuid.UUID{ch.UserID, ch.FriendID}
-	if err := s.roommemberRepo.Save(chatroom.ID, userIDs); err != nil {
-		return nil, err
-	}
+	// userIDs := []uuid.UUID{ch.UserID, ch.FriendID}
+	// if err := s.roommemberRepo.Save(chatroom.ID, userIDs); err != nil {
+	// 	return nil, err
+	// }
 
 	//create room member
 

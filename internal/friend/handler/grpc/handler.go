@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MingPV/ChatService/internal/entities"
 	"github.com/MingPV/ChatService/internal/friend/usecase"
@@ -128,12 +129,14 @@ func (h *GrpcFriendHandler) IsMyFriend(ctx context.Context, req *friendpb.IsMyFr
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
 	friendUUID, err := uuid.Parse(req.FriendId)
+	fmt.Println(userUUID, friendUUID)
 	if err != nil {
 		return nil, status.Errorf(apperror.GRPCCode(err), "%s", err.Error())
 	}
 	
-	status, _ := h.friendUseCase.IsMyfriend(userUUID, friendUUID)
-	return &friendpb.IsMyFriendResponse{Status: status}, nil
+	friend, _ := h.friendUseCase.IsMyfriend(userUUID, friendUUID)
+	fmt.Println(friend)
+	return &friendpb.IsMyFriendResponse{Friend: toProtoFriend(friend)}, nil
 }
 
 func (h *GrpcFriendHandler) AcceptFriend(ctx context.Context, req *friendpb.AcceptFriendRequest) (*friendpb.AcceptFriendResponse, error){
