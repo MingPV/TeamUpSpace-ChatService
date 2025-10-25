@@ -27,12 +27,12 @@ func NewMongoMessageRepository(db *mongo.Database) MessageRepository {
 }
 
 type messageDoc struct {
-	ID    	 	int    	`bson:"_id,omitempty"`
-	RoomId		uint 		`bson:"room_id"`
-	Message  	string		`bson:"message"`
-	Sender		uuid.UUID	`bson:"sender"`
-	CreatedAt 	time.Time 	`bson:"created_at"`
-    UpdatedAt 	time.Time 	`bson:"updated_at"`
+	ID        int       `bson:"_id,omitempty"`
+	RoomId    uint      `bson:"room_id"`
+	Message   string    `bson:"message"`
+	Sender    uuid.UUID `bson:"sender"`
+	CreatedAt time.Time `bson:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at"`
 }
 
 type counterDoc struct {
@@ -72,7 +72,7 @@ func (r *MongoMessageRepository) getNextSequence(ctx context.Context, name strin
 
 func (r *MongoMessageRepository) Save(message *entities.Message) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel();
+	defer cancel()
 
 	nextID, err := r.getNextSequence(ctx, "messages")
 	if err != nil {
@@ -80,10 +80,10 @@ func (r *MongoMessageRepository) Save(message *entities.Message) error {
 	}
 
 	_, err = r.coll.InsertOne(ctx, messageDoc{
-		ID: nextID,
-		RoomId: message.RoomId,
-		Message: message.Message,
-		Sender: message.Sender,
+		ID:        nextID,
+		RoomId:    message.RoomId,
+		Message:   message.Message,
+		Sender:    message.Sender,
 		CreatedAt: message.CreatedAt,
 		UpdatedAt: message.UpdatedAt,
 	})
@@ -117,10 +117,10 @@ func (r *MongoMessageRepository) FindAllByRoomID(roomId int) ([]*entities.Messag
 			return nil, err
 		}
 		results = append(results, &entities.Message{
-			ID: uint(m.ID),
-			RoomId: m.RoomId,
-			Message: m.Message,
-			Sender: m.Sender,
+			ID:        uint(m.ID),
+			RoomId:    m.RoomId,
+			Message:   m.Message,
+			Sender:    m.Sender,
 			CreatedAt: m.CreatedAt,
 			UpdatedAt: m.UpdatedAt,
 		})
@@ -136,7 +136,7 @@ func (r *MongoMessageRepository) DeleteAllMessagesByRoomID(roomId int) error {
 	defer cancel()
 
 	filter := bson.M{
-		"room_id" : roomId,
+		"room_id": roomId,
 	}
 
 	_, err := r.coll.DeleteMany(ctx, filter)
@@ -165,56 +165,58 @@ func (r *MongoMessageRepository) FindByRoomId(roomId int) (*entities.Message, er
 
 func (r *MongoMessageRepository) FindAllMessagesUnread(userId uuid.UUID, roomId int) ([]*entities.Message, error) {
 	fmt.Println("roomId", roomId)
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    // 1️⃣ Get the last visit timestamp from lastvisit collection
-    lastVisitCollection := r.db.Collection("lastvisits")
-    var lastVisitDoc struct {
-        UserID    string    `bson:"user_id"`
-        LastVisit time.Time `bson:"lastvisit"`
-		RoomID	int	`bson:"room_id"`
-    }
+	// 1️⃣ Get the last visit timestamp from lastvisit collection
+	lastVisitCollection := r.db.Collection("lastvisits")
+	var lastVisitDoc struct {
+		UserID    string    `bson:"user_id"`
+		LastVisit time.Time `bson:"lastvisit"`
+		RoomID    int       `bson:"room_id"`
+	}
 
-    err := lastVisitCollection.FindOne(ctx, bson.M{"user_id": userId, "room_id": roomId}).Decode(&lastVisitDoc)
-    if err != nil {
-        if err == mongo.ErrNoDocuments {
-            // User never visited, return all messages
-            lastVisitDoc.LastVisit = time.Time{} // zero time
-        } else {
-            return nil, err
-        }
-    }
+	err := lastVisitCollection.FindOne(ctx, bson.M{"user_id": userId, "room_id": roomId}).Decode(&lastVisitDoc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			// User never visited, return all messages
+			lastVisitDoc.LastVisit = time.Time{} // zero time
+			fmt.Println("lastVisitDoc.LastVisit", lastVisitDoc.LastVisit)
+		} else {
+			return nil, err
+		}
+	}
 
-
-    // 2️⃣ Query messages created after lastVisit
-    messagesCollection := r.db.Collection("messages")
+	// 2️⃣ Query messages created after lastVisit
+	messagesCollection := r.db.Collection("messages")
 	fmt.Println(lastVisitDoc)
-    filter := bson.M{
-	"room_id": roomId,
-	"created_at": bson.M{
-		"$gt": lastVisitDoc.LastVisit,
-	},
-}
+	fmt.Println("lastVisitDoc.LastVisit", lastVisitDoc.LastVisit)
 
-    cursor, err := messagesCollection.Find(ctx, filter)
-    if err != nil {
-        return nil, err
-    }
-    defer cursor.Close(ctx)
+	filter := bson.M{
+		"room_id": roomId,
+		"created_at": bson.M{
+			"$gt": lastVisitDoc.LastVisit,
+		},
+	}
 
-    var messages []*entities.Message
-    for cursor.Next(ctx) {
-        var m entities.Message
-        if err := cursor.Decode(&m); err != nil {
-            return nil, err
-        }
-        messages = append(messages, &m)
-    }
+	cursor, err := messagesCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-    if err := cursor.Err(); err != nil {
-        return nil, err
-    }
+	var messages []*entities.Message
+	for cursor.Next(ctx) {
+		var m entities.Message
+		if err := cursor.Decode(&m); err != nil {
+			return nil, err
+		}
+		messages = append(messages, &m)
+	}
 
-    return messages, nil
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return messages, nil
 }
